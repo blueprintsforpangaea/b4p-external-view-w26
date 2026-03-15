@@ -1,0 +1,14 @@
+# The Secret Box (Your API keys and paths)
+.env
+
+# The Tool Box (Your installed libraries)
+.venv/
+env/
+venv/
+
+# Google Cloud Key (The actual JSON file itself)
+*.json
+
+# Python cache (Speeds up execution, but messy to share)
+__pycache__/
+*.pyc
