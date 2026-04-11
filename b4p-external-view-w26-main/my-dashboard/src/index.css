@@ -1,0 +1,52 @@
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #5c5c5c;
+  --color-text-tertiary: #8a8a8a;
+  --color-text-danger: #a93226;
+  --color-text-success: #2f5c12;
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f6f7f8;
+  --color-background-success: #e8f4e0;
+  --color-border-secondary: #d0d4d8;
+  --color-border-tertiary: #e6e8eb;
+  --color-border-success: #b8d6a3;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  color: var(--color-text-primary);
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 8px;
+  transform: rotate(0deg);
+  transition: transform 0.15s ease;
+  color: var(--color-text-tertiary);
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}

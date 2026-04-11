@@ -1,0 +1,15 @@
+# The Secret Box (Your API keys and paths)
+.env
+
+# The Tool Box (Your installed libraries)
+.venv/
+env/
+venv/
+
+# Google Cloud service account keys (never commit real keys)
+*credentials*.json
+*service-account*.json
+
+# Python cache (Speeds up execution, but messy to share)
+__pycache__/
+*.pyc
