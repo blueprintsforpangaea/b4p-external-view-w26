@@ -77,9 +77,24 @@ function subcategory(item) {
 
 function pickNameField(item) {
   const keys = Object.keys(item);
-  const preferred = keys.find(k =>
-    ['name', 'item', 'description', 'supply', 'product'].some(n => k.toLowerCase().includes(n))
-  );
+  const exactPreferred = [
+    'Name',
+    'name',
+    'Item Name',
+    'item_name',
+    'Item',
+    'item',
+    'Description',
+    'description',
+  ];
+  const exact = exactPreferred.find(k => keys.includes(k));
+  if (exact) return exact;
+
+  const preferred = keys.find(k => {
+    const lower = k.toLowerCase();
+    if (lower.includes('manufacturer')) return false;
+    return ['name', 'item', 'description', 'supply', 'product'].some(n => lower.includes(n));
+  });
   return preferred || keys.find(k => k !== '_sheet_row') || 'Name';
 }
 
