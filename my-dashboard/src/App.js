@@ -104,19 +104,22 @@ function ItemRow({ item, category, selected, onToggle, columns }) {
 export default function App() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [selected, setSelected] = useState(new Set());
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notes, setNotes] = useState('');
+  const [requesterName, setRequesterName] = useState('');
+  const [submissionSummary, setSubmissionSummary] = useState(null);
 
   useEffect(() => {
     fetch('http://localhost:8000/api/supplies')
       .then(r => r.json())
       .then(json => { setData(json); setLoading(false); })
-      .catch(() => { setError('Could not connect to server.'); setLoading(false); });
+      .catch(() => { setLoadError('Could not connect to server.'); setLoading(false); });
   }, []);
 
   const enriched = useMemo(() =>
@@ -142,29 +145,55 @@ export default function App() {
     });
   }, [enriched, query, activeCategory]);
 
-  const toggleItem = (index) => {
+  const toggleItem = (sheetRow) => {
     setSelected(prev => {
       const next = new Set(prev);
-      next.has(index) ? next.delete(index) : next.add(index);
+      next.has(sheetRow) ? next.delete(sheetRow) : next.add(sheetRow);
       return next;
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selected.size === 0) return;
     setSubmitting(true);
-    setTimeout(() => {
+    setSubmitError(null);
+
+    try {
+      const response = await fetch('http://localhost:8000/api/requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          requester_name: requesterName.trim() || 'External User',
+          notes,
+          items: [...selected].map(sheetRow => ({ sheet_row: sheetRow })),
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.detail || 'Request submission failed.');
+      }
+
+      setSubmissionSummary(payload);
       setSubmitting(false);
       setSubmitted(true);
-    }, 900);
+    } catch (err) {
+      setSubmitting(false);
+      setSubmitError(err.message || 'Request submission failed.');
+    }
   };
 
   const reset = () => {
     setSubmitted(false);
     setSelected(new Set());
     setNotes('');
+    setRequesterName('');
+    setSubmissionSummary(null);
     setQuery('');
     setActiveCategory('All');
+    setSubmitError(null);
   };
 
   if (loading) return (
@@ -181,14 +210,14 @@ export default function App() {
     </div>
   );
 
-  if (error) return (
+  if (loadError) return (
     <div style={{ padding: '40px 24px', textAlign: 'center' }}>
-      <p style={{ color: 'var(--color-text-danger)', fontSize: '14px' }}>{error}</p>
+      <p style={{ color: 'var(--color-text-danger)', fontSize: '14px' }}>{loadError}</p>
     </div>
   );
 
   if (submitted) {
-    const selectedItems = filtered.filter((_, i) => selected.has(i));
+    const selectedItems = enriched.filter(item => selected.has(item._sheet_row));
     return (
       <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 24px', fontFamily: 'var(--font-sans)' }}>
         <div style={{
@@ -208,10 +237,19 @@ export default function App() {
           <div>
             <p style={{ margin: 0, fontWeight: 500, fontSize: '15px', color: 'var(--color-text-success)' }}>Request submitted</p>
             <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--color-text-success)' }}>
-              {selected.size} item{selected.size !== 1 ? 's' : ''} requested
+              {submissionSummary?.count || selected.size} item{selected.size !== 1 ? 's' : ''} requested and emailed to the team
             </p>
           </div>
         </div>
+
+        {submissionSummary?.requested_supply_ids?.length > 0 && (
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: '0 0 6px' }}>Supply IDs sent</p>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-primary)', margin: 0 }}>
+              {submissionSummary.requested_supply_ids.join(', ')}
+            </p>
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
           {selectedItems.map((item, i) => {
@@ -371,8 +409,8 @@ export default function App() {
                     <ItemRow
                       item={item}
                       category={item._category}
-                      selected={selected.has(i)}
-                      onToggle={() => toggleItem(i)}
+                      selected={selected.has(item._sheet_row)}
+                      onToggle={() => toggleItem(item._sheet_row)}
                       columns={columns}
                     />
                   </React.Fragment>
@@ -406,6 +444,24 @@ export default function App() {
               fontFamily: 'var(--font-sans)',
             }}
           />
+          <input
+            type="text"
+            placeholder="Your name (optional)"
+            value={requesterName}
+            onChange={e => setRequesterName(e.target.value)}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              fontSize: '13px', marginBottom: '12px', padding: '10px 12px',
+              borderRadius: '8px', border: '0.5px solid var(--color-border-secondary)',
+              background: 'var(--color-background-secondary)',
+              color: 'var(--color-text-primary)',
+            }}
+          />
+          {submitError && (
+            <p style={{ margin: '0 0 12px', fontSize: '13px', color: 'var(--color-text-danger)' }}>
+              {submitError}
+            </p>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               onClick={handleSubmit}
@@ -421,13 +477,14 @@ export default function App() {
               {submitting ? 'Submitting...' : `Submit request (${selected.size} item${selected.size !== 1 ? 's' : ''})`}
             </button>
             <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-              {[...selected].slice(0, 3).map(i => {
-                const item = filtered[i];
+              {[...selected].slice(0, 3).map(sheetRow => {
+                const item = enriched.find(entry => entry._sheet_row === sheetRow);
+                if (!item) return null;
                 const nameKey = Object.keys(item).find(k =>
                   ['name', 'item', 'description', 'supply', 'product'].some(n => k.toLowerCase().includes(n))
                 ) || Object.keys(item)[0];
                 return item[nameKey];
-              }).join(', ')}
+              }).filter(Boolean).join(', ')}
               {selected.size > 3 ? ` +${selected.size - 3} more` : ''}
             </span>
           </div>

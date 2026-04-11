@@ -33,8 +33,8 @@ install:
 dev:
 	@echo "Starting backend (:8000) + frontend (:3000) — press Ctrl+C to stop both."
 	@trap 'kill 0' SIGINT SIGTERM; \
-	  (cd "$(ROOT)" && USE_SAMPLE_DATA=1 python3 -m uvicorn main:app --reload --host 127.0.0.1 --port 8000) & \
-	  (cd "$(ROOT)/my-dashboard" && DANGEROUSLY_DISABLE_HOST_CHECK=true npm start) & \
+	  (cd "$(ROOT)" && USE_SAMPLE_DATA=1 python3 -m uvicorn main:app --host 127.0.0.1 --port 8000) & \
+	  (cd "$(ROOT)/my-dashboard" && HOST=127.0.0.1 PORT=3000 DANGEROUSLY_DISABLE_HOST_CHECK=true npm start) & \
 	  wait
 
 # ── Build (production React bundle) ───────────────────────────────────────────
@@ -70,12 +70,12 @@ smoke:
 # ── Individual dev servers ─────────────────────────────────────────────────────
 backend:
 	@echo "Sample inventory — http://127.0.0.1:8000  (Ctrl+C to stop)"
-	cd "$(ROOT)" && USE_SAMPLE_DATA=1 python3 -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+	cd "$(ROOT)" && USE_SAMPLE_DATA=1 python3 -m uvicorn main:app --host 127.0.0.1 --port 8000
 
 backend-live:
 	@echo "Live Sheets — needs .env + credentials — http://127.0.0.1:8000  (Ctrl+C to stop)"
-	cd "$(ROOT)" && python3 -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+	cd "$(ROOT)" && python3 -m uvicorn main:app --host 127.0.0.1 --port 8000
 
 frontend:
 	@echo "React — http://localhost:3000  (Ctrl+C to stop)"
-	cd "$(ROOT)/my-dashboard" && DANGEROUSLY_DISABLE_HOST_CHECK=true npm start
+	cd "$(ROOT)/my-dashboard" && HOST=127.0.0.1 PORT=3000 DANGEROUSLY_DISABLE_HOST_CHECK=true npm start

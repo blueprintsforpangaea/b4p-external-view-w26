@@ -4,7 +4,7 @@ import random
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 import gspread
 import pandas as pd
@@ -182,7 +182,7 @@ class SubmitRequestBody(BaseModel):
     nametag: str = Field(min_length=1, max_length=200)
     items: list[CartLineIn] = Field(min_length=1)
     request_notes: str = Field(default="", max_length=4000)
-    client_request_id: str | None = Field(default=None, max_length=80)
+    client_request_id: Optional[str] = Field(default=None, max_length=80)
 
     @field_validator("nametag")
     @classmethod
@@ -193,7 +193,7 @@ class SubmitRequestBody(BaseModel):
         return t
 
 
-def _snapshot_row(inventory: list[dict], sheet_row: int) -> dict | None:
+def _snapshot_row(inventory: list[dict], sheet_row: int) -> Optional[dict]:
     for rec in inventory:
         if int(rec.get("_sheet_row", -1)) == sheet_row:
             return rec
@@ -351,13 +351,16 @@ def _org_requests_worksheet(spreadsheet: gspread.Spreadsheet) -> gspread.Workshe
         ws = spreadsheet.add_worksheet(title=title, rows=3000, cols=len(ORG_REQ_HEADERS) + 2)
 
     rows = ws.get_all_values()
-    if not rows:
+    first_row = rows[0] if rows else []
+    has_header_row = bool(first_row) and any(str(cell).strip() for cell in first_row)
+
+    if not has_header_row:
         ws.append_row(ORG_REQ_HEADERS, value_input_option="USER_ENTERED")
-    elif rows[0][0] != ORG_REQ_HEADERS[0]:
+    elif first_row[0] != ORG_REQ_HEADERS[0]:
         raise HTTPException(
             status_code=500,
             detail=(
-                f"Worksheet '{title}' has unexpected headers (row 1, col A = '{rows[0][0]}'). "
+                f"Worksheet '{title}' has unexpected headers (row 1, col A = '{first_row[0]}'). "
                 "Expected 'Request ID'. Set ORG_REQUESTS_WORKSHEET_TITLE to a compatible or empty tab."
             ),
         )
@@ -571,7 +574,7 @@ async def inventory_availability():
 
 
 @app.get("/requests")
-async def list_org_requests(email: str | None = None):
+async def list_org_requests(email: Optional[str] = None):
     """Return org request rows, optionally filtered by org email."""
     if _use_sample_data():
         return []
