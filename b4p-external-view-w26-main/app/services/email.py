@@ -10,6 +10,11 @@ SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 
 
+def _item_key_suffix(item: dict) -> str:
+    key = str(item.get("inventory_key", "")).strip()
+    return f" [Key: {key}]" if key else ""
+
+
 def _send(to: "str | list[str]", subject: str, html: str) -> None:
     """Send an HTML email via Gmail SMTP (App Password auth)."""
     user = os.environ.get("GMAIL_USER", "").strip()
@@ -45,7 +50,7 @@ def send_org_confirmation(
 ) -> None:
     """Confirmation email to the requesting org after submission."""
     items_html = "".join(
-        f"<li><strong>{item['item_name']}</strong> "
+        f"<li><strong>{item['item_name']}</strong>{_item_key_suffix(item)} "
         f"(Category: {item['category']}) — Qty: {item['quantity']}</li>"
         for item in items
     )
@@ -84,7 +89,7 @@ def send_hq_alert(
         return
 
     items_html = "".join(
-        f"<li><strong>{item['item_name']}</strong> "
+        f"<li><strong>{item['item_name']}</strong>{_item_key_suffix(item)} "
         f"(Category: {item['category']}) — Qty: {item['quantity']}</li>"
         for item in items
     )
@@ -132,7 +137,7 @@ def send_status_update(
 ) -> None:
     """Status update email to the org when their request is Approved or Shipped."""
     items_html = "".join(
-        f"<li><strong>{item['item_name']}</strong> "
+        f"<li><strong>{item['item_name']}</strong>{_item_key_suffix(item)} "
         f"(Category: {item['category']}) — Qty: {item['quantity']}</li>"
         for item in items
     )

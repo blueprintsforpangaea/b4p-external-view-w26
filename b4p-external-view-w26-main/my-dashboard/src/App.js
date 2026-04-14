@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import bloopsLogo from './assets/bloops-logo.avif';
 
 const apiBase = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
 
@@ -197,6 +198,35 @@ const AVAIL_COLORS = {
   Shipped:   { bg: '#F0F0F0', fg: '#6B6B6B', border: '#CCCCCC' },
 };
 
+const PRIMARY_BUTTON = {
+  background: 'linear-gradient(180deg, var(--accent-blue), var(--accent-blue-dark))',
+  color: '#fff',
+  border: '1px solid rgba(255,255,255,0.2)',
+  borderRadius: '999px',
+  padding: '10px 18px',
+  cursor: 'pointer',
+  fontWeight: 600,
+  letterSpacing: '0.01em',
+  boxShadow: '0 8px 18px rgba(10, 132, 255, 0.24)',
+};
+
+const SECONDARY_BUTTON = {
+  background: 'var(--color-background-primary)',
+  color: 'var(--color-text-primary)',
+  border: '1px solid var(--color-border-secondary)',
+  borderRadius: '999px',
+  padding: '10px 16px',
+  cursor: 'pointer',
+  fontWeight: 600,
+};
+
+const PANEL_STYLE = {
+  background: 'var(--color-background-primary)',
+  border: '1px solid var(--color-border-secondary)',
+  borderRadius: '24px',
+  boxShadow: 'var(--color-panel-shadow)',
+};
+
 // ── Components ───────────────────────────────────────────────────────────────
 function TabButton({ active, children, onClick }) {
   return (
@@ -204,14 +234,15 @@ function TabButton({ active, children, onClick }) {
       type="button"
       onClick={onClick}
       style={{
-        padding: '8px 16px',
-        fontSize: '14px',
-        borderRadius: '8px',
-        border: active ? 'none' : '0.5px solid var(--color-border-secondary)',
-        background: active ? '#185FA5' : 'transparent',
-        color: active ? 'white' : 'var(--color-text-secondary)',
-        fontWeight: active ? 600 : 500,
+        padding: '11px 18px',
+        fontSize: '13px',
+        borderRadius: '999px',
+        border: '1px solid var(--color-border-secondary)',
+        background: active ? 'rgba(10,132,255,0.12)' : 'rgba(255,255,255,0.65)',
+        color: active ? 'var(--accent-blue-dark)' : 'var(--color-text-secondary)',
+        fontWeight: 600,
         cursor: 'pointer',
+        boxShadow: active ? '0 8px 18px rgba(10,132,255,0.12)' : 'none',
       }}
     >
       {children}
@@ -221,17 +252,17 @@ function TabButton({ active, children, onClick }) {
 
 function StatusPill({ status }) {
   const colors = {
-    ok:   { bg: '#E3F1D7', fg: '#2F5C12', border: '#B8D6A3' },
-    warn: { bg: '#FFF3CD', fg: '#6B4E0A', border: '#E8D48B' },
-    info: { bg: '#D9EDF7', fg: '#1B4F72', border: '#A9CCE3' },
-    muted: { bg: 'var(--color-background-secondary)', fg: 'var(--color-text-secondary)', border: 'var(--color-border-tertiary)' },
+    ok:   { bg: '#E3F1D7', fg: '#2F5C12', border: '#2F5C12' },
+    warn: { bg: '#FFF3CD', fg: '#6B4E0A', border: '#6B4E0A' },
+    info: { bg: '#D9EDF7', fg: '#1B4F72', border: '#1B4F72' },
+    muted: { bg: 'var(--color-background-secondary)', fg: 'var(--color-text-secondary)', border: 'var(--color-border-secondary)' },
   };
   const c = colors[status.tone] || colors.muted;
   return (
     <span
       style={{
-        fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px',
-        background: c.bg, color: c.fg, border: `0.5px solid ${c.border}`, whiteSpace: 'nowrap',
+        fontSize: '11px', fontWeight: 600, padding: '5px 10px', borderRadius: '999px',
+        background: c.bg, color: c.fg, border: `1px solid ${c.border}`, whiteSpace: 'nowrap',
       }}
     >
       {status.label}
@@ -252,12 +283,68 @@ function AvailBadge({ availInfo }) {
   return (
     <span
       style={{
-        fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px',
-        background: c.bg, color: c.fg, border: `0.5px solid ${c.border}`, whiteSpace: 'nowrap',
+        fontSize: '11px', fontWeight: 600, padding: '5px 10px', borderRadius: '999px',
+        background: c.bg, color: c.fg, border: `1px solid ${c.border}`, whiteSpace: 'nowrap',
       }}
     >
       {label}
     </span>
+  );
+}
+
+function MetricCard({ label, value, accent }) {
+  return (
+    <div style={{
+      ...PANEL_STYLE,
+      minHeight: '108px',
+      padding: '18px 18px 20px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      background: accent,
+    }}>
+      <span style={{
+        fontSize: '12px',
+        color: 'var(--color-text-secondary)',
+        fontWeight: 600,
+      }}
+      >
+        {label}
+      </span>
+      <span style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: '32px',
+        lineHeight: 1,
+        fontWeight: 700,
+      }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function BrandLogo() {
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '8px 10px',
+      borderRadius: '18px',
+      background: 'rgba(255, 255, 255, 0.92)',
+    }}>
+      <img
+        src={bloopsLogo}
+        alt="Blueprints for Pangaea"
+        style={{
+          height: '64px',
+          width: 'auto',
+          objectFit: 'contain',
+          display: 'block',
+        }}
+      />
+    </div>
   );
 }
 
@@ -379,6 +466,17 @@ export default function App() {
     [cart]
   );
 
+  const summaryCounts = useMemo(() => {
+    const requested = Object.values(availMap).filter(row => row.availability_status === 'Requested').length;
+    const limited = Object.values(availMap).filter(row => row.availability_status === 'Limited').length;
+    return {
+      totalItems: data.length,
+      categories: Math.max(0, parentOptions.length - 1),
+      requested,
+      limited,
+    };
+  }, [availMap, data.length, parentOptions.length]);
+
   // ── Auth handlers ──────────────────────────────────────────────────────────
   const handleLogin = useCallback(() => {
     const name = loginName.trim();
@@ -480,6 +578,7 @@ export default function App() {
               item_name: String(l.item[nk] || ''),
               category: parentCategory(l.item),
               quantity: l.quantity,
+              sheet_row: Number(l.item._sheet_row),
             };
           }),
         }),
@@ -548,598 +647,583 @@ export default function App() {
   }
 
   return (
-    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '24px 20px 120px', fontFamily: 'var(--font-sans)' }}>
-      {/* ── Header ── */}
-      <header style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '6px' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: 600, margin: 0, color: 'var(--color-text-primary)' }}>
-            Blueprints supply desk
-          </h1>
-          {/* Login / org info */}
-          {org ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
-              <span style={{ color: 'var(--color-text-secondary)' }}>
-                Signed in as <strong>{org.org_name}</strong>
-              </span>
-              <button type="button" onClick={handleLogout} style={{
-                fontSize: '12px', padding: '4px 10px', borderRadius: '6px',
-                border: '0.5px solid var(--color-border-secondary)',
-                background: 'transparent', cursor: 'pointer', color: 'var(--color-text-secondary)',
-              }}>
-                Sign out
-              </button>
-            </div>
-          ) : (
-            <button type="button" onClick={() => setLoginOpen(true)} style={{
-              fontSize: '13px', padding: '6px 14px', borderRadius: '8px',
-              border: '0.5px solid var(--color-border-secondary)',
-              background: 'var(--color-background-secondary)', cursor: 'pointer',
-              fontWeight: 500,
-            }}>
-              Sign in
-            </button>
-          )}
-        </div>
-        <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', margin: '0 0 16px' }}>
-          Browse consolidated supplies and submit a request — sign in with your org name and email to get started.
-        </p>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <TabButton active={tab === 'browse'} onClick={() => setTab('browse')}>
-            Browse & request
-          </TabButton>
-          <TabButton active={tab === 'my-requests'} onClick={() => {
-            if (!org) { setLoginOpen(true); return; }
-            setTab('my-requests');
-            reloadOrgReq();
-          }}>
-            My Requests
-          </TabButton>
-          <div style={{ flex: 1 }} />
-          {/* Cart button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (!org) { setLoginOpen(true); return; }
-              setCartOpen(v => !v);
-            }}
-            style={{
-              position: 'relative', padding: '8px 14px', borderRadius: '8px',
-              border: '0.5px solid var(--color-border-secondary)',
-              background: 'var(--color-background-secondary)', cursor: 'pointer', fontSize: '14px',
-            }}
-          >
-            Cart{cartCount > 0 ? ` (${cartCount})` : ''}
-            {cartCount > 0 && (
-              <span style={{
-                position: 'absolute', top: '-6px', right: '-6px',
-                background: '#C0392B', color: 'white', fontSize: '11px',
-                minWidth: '18px', height: '18px', borderRadius: '999px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px',
-              }}>
-                {cartCount > 99 ? '99+' : cartCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </header>
-
-      {/* ── Success banner ── */}
-      {doneBanner && (
-        <div style={{
-          marginBottom: '16px', padding: '12px 14px', borderRadius: '10px',
-          background: 'var(--color-background-success)',
-          border: '0.5px solid var(--color-border-success)',
-          color: 'var(--color-text-success)', fontSize: '14px',
-          display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center',
+    <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh' }}>
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        background: [
+          'radial-gradient(circle at 18% 0%, rgba(10,132,255,0.08) 0 10%, transparent 10.5%)',
+          'radial-gradient(circle at 85% 12%, rgba(255,255,255,0.42) 0 18%, transparent 18.4%)',
+        ].join(', '),
+      }}
+      />
+      <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '32px 20px 120px', position: 'relative', zIndex: 1 }}>
+        <section style={{
+          ...PANEL_STYLE,
+          padding: '28px',
+          marginBottom: '22px',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr)',
+          gap: '18px',
+          alignItems: 'stretch',
+          background: 'rgba(255,255,255,0.78)',
+          backdropFilter: 'blur(16px)',
         }}>
-          <span>{doneBanner}</span>
-          <button type="button" onClick={() => setDoneBanner(null)}
-            style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '18px', lineHeight: 1 }}>
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* ── Cart add warning ── */}
-      {cartWarning && (
-        <div style={{
-          marginBottom: '12px', padding: '10px 14px', borderRadius: '8px',
-          background: '#FFF8C5', border: '0.5px solid #E8D48B', color: '#7A6A00', fontSize: '13px',
-          display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center',
-        }}>
-          <span>{cartWarning}</span>
-          <button type="button" onClick={() => setCartWarning(null)}
-            style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '16px', lineHeight: 1, color: '#7A6A00' }}>
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* ══════════════════ BROWSE TAB ══════════════════ */}
-      {tab === 'browse' && (
-        <>
-          <div style={{ position: 'relative', marginBottom: '12px' }}>
-            <input
-              type="search"
-              placeholder="Search name, manufacturer, lot, notes…"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              style={{
-                width: '100%', boxSizing: 'border-box', padding: '10px 12px', fontSize: '14px',
-                borderRadius: '8px', border: '0.5px solid var(--color-border-secondary)',
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              Warehouse category
-              <select value={parentFilter} onChange={e => setParentFilter(e.target.value)}
-                style={{ fontSize: '13px', padding: '6px 8px', borderRadius: '6px' }}>
-                {parentOptions.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </label>
-            <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              Supply type
-              <select value={subFilter} onChange={e => setSubFilter(e.target.value)}
-                style={{ fontSize: '13px', padding: '6px 8px', borderRadius: '6px' }}>
-                {subOptions.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </label>
-          </div>
-
-          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: '0 0 14px' }}>
-            Items are grouped by a generic label (from the <strong>General</strong> field when present). Expand a row to see each specific SKU.
-          </p>
-
-          {groups.parentKeys.length === 0 ? (
-            <p style={{ color: 'var(--color-text-secondary)' }}>No items match these filters.</p>
-          ) : (
-            groups.parentKeys.map(parent => {
-              const subs = groups.parents.get(parent);
-              const subKeys = [...subs.keys()].sort(sortMiscLast);
-              const pal = paletteForKey(parent);
-              return (
-                <section key={parent} style={{
-                  marginBottom: '18px', borderRadius: '12px',
-                  border: `0.5px solid ${pal.border}`, overflow: 'hidden',
-                  background: 'var(--color-background-primary)',
-                }}>
-                  <div style={{ padding: '10px 14px', background: pal.bg, color: pal.fg, fontWeight: 600, fontSize: '15px' }}>
-                    {parent}
-                  </div>
-                  <div style={{ padding: '10px 12px 14px' }}>
-                    {subKeys.map(sub => {
-                      const generics = subs.get(sub);
-                      const genKeys = [...generics.keys()].sort((a, b) => a.localeCompare(b));
-                      return (
-                        <div key={sub} style={{ marginBottom: '12px' }}>
-                          <div style={{
-                            fontSize: '12px', fontWeight: 600, letterSpacing: '0.04em',
-                            textTransform: 'uppercase', color: 'var(--color-text-secondary)', margin: '6px 4px 8px',
-                          }}>
-                            {sub}
-                          </div>
-                          {genKeys.map(gen => {
-                            const items = generics.get(gen);
-                            const totalStock = items.reduce((sum, it) => sum + (parseStockQuantity(it) || 0), 0);
-                            return (
-                              <details key={`${sub}::${gen}`} style={{
-                                border: '0.5px solid var(--color-border-tertiary)',
-                                borderRadius: '10px', marginBottom: '8px',
-                                background: 'var(--color-background-secondary)',
-                              }}>
-                                <summary style={{
-                                  cursor: 'pointer', listStyle: 'none', padding: '10px 12px',
-                                  display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center',
-                                }}>
-                                  <span style={{ fontWeight: 600, color: 'var(--color-text-primary)', flex: '1 1 200px' }}>{gen}</span>
-                                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                                    {items.length} listing{items.length !== 1 ? 's' : ''}
-                                    {totalStock > 0 ? ` · ~${totalStock} units in view` : ''}
-                                  </span>
-                                </summary>
-                                <div style={{ padding: '0 8px 10px' }}>
-                                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                                    <thead>
-                                      <tr style={{ color: 'var(--color-text-secondary)', textAlign: 'left' }}>
-                                        <th style={{ padding: '6px 6px' }}>Item</th>
-                                        <th style={{ padding: '6px 6px', width: '120px' }}>Manufacturer</th>
-                                        <th style={{ padding: '6px 6px', width: '60px' }}>Qty</th>
-                                        <th style={{ padding: '6px 6px', width: '90px' }}>Status</th>
-                                        <th style={{ padding: '6px 6px', width: '140px' }}>Availability</th>
-                                        <th style={{ padding: '6px 6px', width: '100px' }} />
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {items.map(it => {
-                                        const nk = pickNameField(it);
-                                        const st = parseStockQuantity(it);
-                                        const status = supplyStatusFromReview(it);
-                                        const row = it._sheet_row;
-                                        const avail = availMap[row];
-                                        const inCart = cart[row]?.quantity || 0;
-                                        return (
-                                          <tr key={row} style={{ borderTop: '0.5px solid var(--color-border-tertiary)' }}>
-                                            <td style={{ padding: '8px 6px', verticalAlign: 'top' }}>
-                                              <div style={{ fontWeight: 500 }}>{it[nk] || '—'}</div>
-                                              <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                                                Lot {it['Lot Number'] || '—'} · Box {it['Box Number'] || '—'}
-                                              </div>
-                                            </td>
-                                            <td style={{ padding: '8px 6px', color: 'var(--color-text-secondary)', verticalAlign: 'top' }}>
-                                              {it['Manufacturer Name'] || '—'}
-                                            </td>
-                                            <td style={{ padding: '8px 6px', verticalAlign: 'top' }}>{st != null ? st : '—'}</td>
-                                            <td style={{ padding: '8px 6px', verticalAlign: 'top' }}>
-                                              <StatusPill status={status} />
-                                            </td>
-                                            <td style={{ padding: '8px 6px', verticalAlign: 'top' }}>
-                                              <AvailBadge availInfo={avail} />
-                                            </td>
-                                            <td style={{ padding: '8px 6px', verticalAlign: 'top', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                              <button type="button" onClick={() => handleAddToCart(it, -1)}
-                                                disabled={inCart <= 0}
-                                                style={{
-                                                  padding: '4px 8px', marginRight: '4px', borderRadius: '6px',
-                                                  border: '0.5px solid var(--color-border-secondary)',
-                                                  background: 'var(--color-background-primary)',
-                                                  cursor: inCart <= 0 ? 'default' : 'pointer',
-                                                }}>
-                                                −
-                                              </button>
-                                              <button type="button" onClick={() => handleAddToCart(it, 1)}
-                                                style={{
-                                                  padding: '4px 10px', borderRadius: '6px', border: 'none',
-                                                  background: '#185FA5', color: 'white', cursor: 'pointer',
-                                                }}>
-                                                Add
-                                              </button>
-                                              {inCart > 0 && (
-                                                <div style={{ fontSize: '12px', marginTop: '4px', color: 'var(--color-text-secondary)' }}>
-                                                  In cart: {inCart}
-                                                </div>
-                                              )}
-                                            </td>
-                                          </tr>
-                                        );
-                                      })}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </details>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-              );
-            })
-          )}
-        </>
-      )}
-
-      {/* ══════════════════ MY REQUESTS TAB ══════════════════ */}
-      {tab === 'my-requests' && (
-        <div>
-          {!org ? (
-            <div style={{ textAlign: 'center', padding: '40px 24px' }}>
-              <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
-                Sign in to view your past requests and live status updates.
-              </p>
-              <button type="button" onClick={() => setLoginOpen(true)} style={{
-                background: '#185FA5', color: 'white', border: 'none',
-                borderRadius: '8px', padding: '9px 18px', cursor: 'pointer', fontWeight: 600,
-              }}>
-                Sign in
-              </button>
-            </div>
-          ) : (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-text-secondary)', flex: 1 }}>
-                  Requests submitted by <strong>{org.org_name}</strong> ({org.org_email})
-                </p>
-                <button type="button" onClick={reloadOrgReq} style={{
-                  padding: '8px 12px', borderRadius: '8px',
-                  border: '0.5px solid var(--color-border-secondary)',
-                  background: 'var(--color-background-secondary)', cursor: 'pointer',
-                }}>
-                  Refresh
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+              <BrandLogo />
+              {org ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--color-text-secondary)' }}>
+                    Signed in as <strong>{org.org_name}</strong>
+                  </span>
+                  <button type="button" onClick={handleLogout} style={{ ...SECONDARY_BUTTON, padding: '8px 14px', fontSize: '12px' }}>
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setLoginOpen(true)} style={{ ...SECONDARY_BUTTON, fontSize: '12px' }}>
+                  Sign in
                 </button>
-              </div>
-              {orgReqLoading && <p style={{ color: 'var(--color-text-secondary)' }}>Loading requests…</p>}
-              {orgReqError && <p style={{ color: 'var(--color-text-danger)' }}>{orgReqError}</p>}
-              {!orgReqLoading && !orgReqError && orgReqGroups.ids.length === 0 && (
-                <p style={{ color: 'var(--color-text-secondary)' }}>No requests yet. Browse the inventory and add items to your cart.</p>
               )}
-              {!orgReqLoading && !orgReqError && orgReqGroups.ids.map(reqId => {
-                const rows = orgReqGroups.byId.get(reqId);
-                const firstRow = rows[0];
-                const ts = firstRow['Timestamp'] || '';
-                const overallStatus = firstRow['Status'] || 'Under Review';
-                const statusTone = overallStatus === 'Shipped' ? 'info'
-                  : overallStatus === 'Approved' ? 'ok'
-                  : 'warn';
-                return (
-                  <details key={reqId} open style={{
-                    marginBottom: '12px', border: '0.5px solid var(--color-border-tertiary)',
-                    borderRadius: '10px', padding: '10px 14px',
-                    background: 'var(--color-background-secondary)',
-                  }}>
-                    <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, fontSize: '14px', flex: '1 1 180px' }}>{reqId}</span>
-                      <StatusPill status={{ label: overallStatus, tone: statusTone }} />
-                      {ts && (
-                        <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                          {new Date(ts).toLocaleString()}
-                        </span>
-                      )}
-                      <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                        {rows.length} item{rows.length !== 1 ? 's' : ''}
-                      </span>
-                    </summary>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginTop: '10px' }}>
-                      <thead>
-                        <tr style={{ color: 'var(--color-text-secondary)', textAlign: 'left' }}>
-                          <th style={{ padding: '4px 6px' }}>Item</th>
-                          <th style={{ padding: '4px 6px', width: '140px' }}>Category</th>
-                          <th style={{ padding: '4px 6px', width: '60px' }}>Qty</th>
-                          <th style={{ padding: '4px 6px', width: '110px' }}>Status</th>
-                          {rows.some(r => r['Review Flag'] === 'TRUE') && (
-                            <th style={{ padding: '4px 6px', width: '90px' }}>Flag</th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row, idx) => {
-                          const rowStatus = row['Status'] || 'Under Review';
-                          const rowTone = rowStatus === 'Shipped' ? 'info'
-                            : rowStatus === 'Approved' ? 'ok' : 'warn';
-                          return (
-                            <tr key={idx} style={{ borderTop: '0.5px solid var(--color-border-tertiary)' }}>
-                              <td style={{ padding: '6px 6px', fontWeight: 500 }}>{row['Item Name'] || '—'}</td>
-                              <td style={{ padding: '6px 6px', color: 'var(--color-text-secondary)' }}>{row['Category'] || '—'}</td>
-                              <td style={{ padding: '6px 6px' }}>{row['Quantity Requested'] || '—'}</td>
-                              <td style={{ padding: '6px 6px' }}>
-                                <StatusPill status={{ label: rowStatus, tone: rowTone }} />
-                              </td>
-                              {rows.some(r => r['Review Flag'] === 'TRUE') && (
-                                <td style={{ padding: '6px 6px' }}>
-                                  {row['Review Flag'] === 'TRUE' && (
-                                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#8B0000' }}>Review needed</span>
-                                  )}
-                                </td>
-                              )}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </details>
-                );
-              })}
-            </>
-          )}
-        </div>
-      )}
+            </div>
 
-      {/* ══════════════════ CART SIDEBAR ══════════════════ */}
-      {cartOpen && (
-        <aside style={{
-          position: 'fixed', right: 16, top: 72, width: 360,
-          maxWidth: 'calc(100vw - 32px)', maxHeight: 'min(75vh, 560px)',
-          overflow: 'auto', boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
-          borderRadius: '12px', border: '0.5px solid var(--color-border-tertiary)',
-          background: 'var(--color-background-primary)', padding: '14px', zIndex: 20,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-            <h2 style={{ margin: 0, fontSize: '16px', flex: 1 }}>Cart</h2>
-            <button type="button" onClick={() => setCartOpen(false)}
-              style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '20px' }}>
+            <div style={{ marginTop: '16px', maxWidth: '760px' }}>
+              <div style={{ fontSize: '40px', lineHeight: 1.08, fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '-0.03em' }}>
+                Medical Supplies Request System
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginTop: '24px' }}>
+              <TabButton active={tab === 'browse'} onClick={() => setTab('browse')}>
+                Browse & request
+              </TabButton>
+              <TabButton active={tab === 'my-requests'} onClick={() => {
+                if (!org) { setLoginOpen(true); return; }
+                setTab('my-requests');
+                reloadOrgReq();
+              }}
+              >
+                My Requests
+              </TabButton>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!org) { setLoginOpen(true); return; }
+                  setCartOpen(v => !v);
+                }}
+                style={{ ...PRIMARY_BUTTON, position: 'relative' }}
+              >
+                Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+                {cartCount > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '-10px', right: '-6px',
+                    background: 'var(--bauhaus-red)', color: 'white', fontSize: '11px',
+                    minWidth: '22px', height: '22px', borderRadius: '999px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '2px solid var(--color-border-secondary)',
+                  }}
+                  >
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+          <MetricCard label="Inventory rows" value={summaryCounts.totalItems} accent="rgba(255,255,255,0.86)" />
+          <MetricCard label="Warehouse categories" value={summaryCounts.categories} accent="rgba(248,250,252,0.92)" />
+          <MetricCard label="Items requested" value={summaryCounts.requested} accent="rgba(255,250,219,0.92)" />
+          <MetricCard label="Low stock rows" value={summaryCounts.limited} accent="rgba(255,244,235,0.92)" />
+        </section>
+
+        {doneBanner && (
+          <div style={{
+            ...PANEL_STYLE,
+            marginBottom: '16px',
+            padding: '14px 18px',
+            background: 'var(--color-background-success)',
+            borderColor: 'var(--color-border-success)',
+            color: 'var(--color-text-success)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '12px',
+            alignItems: 'center',
+            borderRadius: '24px',
+          }}>
+            <span>{doneBanner}</span>
+            <button type="button" onClick={() => setDoneBanner(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '22px', lineHeight: 1 }}>
               ×
             </button>
           </div>
-          {cartCount === 0 ? (
-            <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>Nothing here yet — add from Browse.</p>
-          ) : (
-            <>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px' }}>
-                {Object.entries(cart).map(([row, line]) => {
-                  const nk = pickNameField(line.item);
-                  const avail = availMap[Number(row)];
-                  const cat = parentCategory(line.item);
+        )}
+
+        {cartWarning && (
+          <div style={{
+            ...PANEL_STYLE,
+            marginBottom: '16px',
+            padding: '14px 18px',
+            background: '#FFF8C5',
+            color: '#7A6A00',
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '12px',
+            alignItems: 'center',
+            borderRadius: '24px',
+          }}>
+            <span>{cartWarning}</span>
+            <button type="button" onClick={() => setCartWarning(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '20px', lineHeight: 1, color: '#7A6A00' }}>
+              ×
+            </button>
+          </div>
+        )}
+
+        {tab === 'browse' && (
+          <>
+            <section style={{ ...PANEL_STYLE, padding: '22px', marginBottom: '18px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', alignItems: 'end' }}>
+                <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Search
+                  <input
+                    type="search"
+                    placeholder="Search name, manufacturer, lot, notes…"
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      marginTop: '8px',
+                      padding: '14px 16px',
+                      fontSize: '15px',
+                      borderRadius: '16px',
+                      border: '1px solid var(--color-border-secondary)',
+                      background: 'rgba(255,255,255,0.82)',
+                    }}
+                  />
+                </label>
+                <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Warehouse category
+                  <select value={parentFilter} onChange={e => setParentFilter(e.target.value)} style={{ width: '100%', marginTop: '8px', padding: '14px 16px', fontSize: '14px', borderRadius: '16px', border: '1px solid var(--color-border-secondary)', background: 'rgba(255,255,255,0.82)' }}>
+                    {parentOptions.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </label>
+                <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Supply type
+                  <select value={subFilter} onChange={e => setSubFilter(e.target.value)} style={{ width: '100%', marginTop: '8px', padding: '14px 16px', fontSize: '14px', borderRadius: '16px', border: '1px solid var(--color-border-secondary)', background: 'rgba(255,255,255,0.82)' }}>
+                    {subOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </label>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: '14px 0 0', maxWidth: '760px' }}>
+                Items stay grouped by the existing generic label logic. Expand a tile to inspect each row. Requested rows are highlighted in yellow and show who requested them.
+              </p>
+            </section>
+
+            {groups.parentKeys.length === 0 ? (
+              <div style={{ ...PANEL_STYLE, padding: '32px', textAlign: 'center' }}>
+                <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>No items match these filters.</p>
+              </div>
+            ) : (
+              groups.parentKeys.map(parent => {
+                const subs = groups.parents.get(parent);
+                const subKeys = [...subs.keys()].sort(sortMiscLast);
+                const pal = paletteForKey(parent);
+                return (
+                  <section key={parent} style={{
+                    ...PANEL_STYLE,
+                    marginBottom: '18px',
+                    overflow: 'hidden',
+                    background: 'rgba(255, 255, 255, 0.82)',
+                  }}>
+                    <div style={{
+                      padding: '18px 20px',
+                      background: 'rgba(248,250,252,0.92)',
+                      color: 'var(--color-text-primary)',
+                      fontWeight: 700,
+                      fontSize: '22px',
+                      borderBottom: '1px solid var(--color-border-secondary)',
+                    }}
+                    >
+                      {parent}
+                    </div>
+                    <div style={{ padding: '16px' }}>
+                      {subKeys.map(sub => {
+                        const generics = subs.get(sub);
+                        const genKeys = [...generics.keys()].sort((a, b) => a.localeCompare(b));
+                        return (
+                          <div key={sub} style={{ marginBottom: '16px' }}>
+                            <div style={{
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              letterSpacing: '0.12em',
+                              textTransform: 'uppercase',
+                              color: 'var(--color-text-secondary)',
+                              margin: '4px 6px 10px',
+                            }}
+                            >
+                              {sub}
+                            </div>
+                            {genKeys.map(gen => {
+                              const items = generics.get(gen);
+                              const totalStock = items.reduce((sum, it) => sum + (parseStockQuantity(it) || 0), 0);
+                              return (
+                                <details key={`${sub}::${gen}`} style={{
+                                  border: '1px solid var(--color-border-secondary)',
+                                  borderRadius: '18px',
+                                  marginBottom: '10px',
+                                  background: 'rgba(255,255,255,0.88)',
+                                  overflow: 'hidden',
+                                }}>
+                                  <summary style={{
+                                    cursor: 'pointer',
+                                    listStyle: 'none',
+                                    padding: '16px 18px',
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: '8px',
+                                    alignItems: 'center',
+                                    background: 'rgba(248,250,252,0.95)',
+                                  }}>
+                                    <span style={{ fontWeight: 600, color: 'var(--color-text-primary)', flex: '1 1 220px', fontSize: '17px' }}>{gen}</span>
+                                    <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                                      {items.length} listing{items.length !== 1 ? 's' : ''}
+                                      {totalStock > 0 ? ` · ~${totalStock} units in view` : ''}
+                                    </span>
+                                  </summary>
+                                  <div style={{ padding: '2px 10px 14px', overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '900px' }}>
+                                      <thead>
+                                        <tr style={{ color: 'var(--color-text-secondary)', textAlign: 'left', fontSize: '12px', borderBottom: '1px solid var(--color-border-tertiary)' }}>
+                                          <th style={{ padding: '12px 10px' }}>Item</th>
+                                          <th style={{ padding: '12px 10px', width: '140px' }}>Manufacturer</th>
+                                          <th style={{ padding: '12px 10px', width: '70px' }}>Qty</th>
+                                          <th style={{ padding: '12px 10px', width: '110px' }}>Status</th>
+                                          <th style={{ padding: '12px 10px', width: '150px' }}>Availability</th>
+                                          <th style={{ padding: '12px 10px', width: '180px' }}>Requested by</th>
+                                          <th style={{ padding: '12px 10px', width: '130px' }} />
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {items.map(it => {
+                                          const nk = pickNameField(it);
+                                          const st = parseStockQuantity(it);
+                                          const status = supplyStatusFromReview(it);
+                                          const row = it._sheet_row;
+                                          const avail = availMap[row];
+                                          const inCart = cart[row]?.quantity || 0;
+                                          const isRequested = avail?.availability_status === 'Requested';
+                                          return (
+                                            <tr key={row} style={{
+                                              background: isRequested ? 'var(--requested-row)' : 'transparent',
+                                              borderBottom: '1px solid var(--color-border-tertiary)',
+                                            }}
+                                            >
+                                              <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>
+                                                <div style={{ fontWeight: 600, fontSize: '14px' }}>{it[nk] || '—'}</div>
+                                                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                                                  Lot {it['Lot Number'] || '—'} · Box {it['Box Number'] || '—'}
+                                                </div>
+                                              </td>
+                                              <td style={{ padding: '14px 10px', color: 'var(--color-text-secondary)', verticalAlign: 'top' }}>
+                                                {it['Manufacturer Name'] || '—'}
+                                              </td>
+                                              <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>{st != null ? st : '—'}</td>
+                                              <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>
+                                                <StatusPill status={status} />
+                                              </td>
+                                              <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>
+                                                <AvailBadge availInfo={avail} />
+                                              </td>
+                                              <td style={{ padding: '14px 10px', verticalAlign: 'top', fontWeight: 600, color: isRequested ? '#7A6A00' : 'var(--color-text-secondary)' }}>
+                                                {isRequested && avail.requesting_org ? `Requested by: ${avail.requesting_org}` : '—'}
+                                              </td>
+                                              <td style={{ padding: '14px 10px', verticalAlign: 'top', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleAddToCart(it, -1)}
+                                                  disabled={inCart <= 0}
+                                                  style={{
+                                                    ...SECONDARY_BUTTON,
+                                                    padding: '7px 11px',
+                                                    marginRight: '6px',
+                                                    opacity: inCart <= 0 ? 0.5 : 1,
+                                                    cursor: inCart <= 0 ? 'default' : 'pointer',
+                                                  }}
+                                                >
+                                                  −
+                                                </button>
+                                                <button type="button" onClick={() => handleAddToCart(it, 1)} style={{ ...PRIMARY_BUTTON, padding: '7px 14px', boxShadow: 'none' }}>
+                                                  Add
+                                                </button>
+                                                {inCart > 0 && (
+                                                  <div style={{ fontSize: '12px', marginTop: '6px', color: 'var(--color-text-secondary)' }}>
+                                                    In cart: {inCart}
+                                                  </div>
+                                                )}
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </details>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })
+            )}
+          </>
+        )}
+
+        {tab === 'my-requests' && (
+          <div style={{ ...PANEL_STYLE, padding: '22px' }}>
+            {!org ? (
+              <div style={{ textAlign: 'center', padding: '40px 24px' }}>
+                <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
+                  Sign in to view your past requests and live status updates.
+                </p>
+                <button type="button" onClick={() => setLoginOpen(true)} style={PRIMARY_BUTTON}>
+                  Sign in
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-text-secondary)', flex: 1 }}>
+                    Requests submitted by <strong>{org.org_name}</strong>
+                  </p>
+                  <button type="button" onClick={reloadOrgReq} style={SECONDARY_BUTTON}>
+                    Refresh
+                  </button>
+                </div>
+                {orgReqLoading && <p style={{ color: 'var(--color-text-secondary)' }}>Loading requests…</p>}
+                {orgReqError && <p style={{ color: 'var(--color-text-danger)' }}>{orgReqError}</p>}
+                {!orgReqLoading && !orgReqError && orgReqGroups.ids.length === 0 && (
+                  <p style={{ color: 'var(--color-text-secondary)' }}>No requests yet. Browse the inventory and add items to your cart.</p>
+                )}
+                {!orgReqLoading && !orgReqError && orgReqGroups.ids.map(reqId => {
+                  const rows = orgReqGroups.byId.get(reqId);
+                  const firstRow = rows[0];
+                  const ts = firstRow['Timestamp'] || '';
+                  const overallStatus = firstRow['Status'] || 'Under Review';
+                  const statusTone = overallStatus === 'Shipped' ? 'info'
+                    : overallStatus === 'Approved' ? 'ok'
+                    : 'warn';
                   return (
-                    <li key={row} style={{
-                      padding: '10px 0', borderBottom: '0.5px solid var(--color-border-tertiary)', fontSize: '13px',
+                    <details key={reqId} open style={{
+                      border: '1px solid var(--color-border-secondary)',
+                      borderRadius: '18px',
+                      padding: '14px 16px',
+                      background: 'rgba(255,255,255,0.82)',
+                      marginBottom: '12px',
                     }}>
-                      <div style={{ fontWeight: 500, marginBottom: '2px' }}>{line.item[nk]}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
-                        {cat}
+                      <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 600, fontSize: '15px', flex: '1 1 180px' }}>{reqId}</span>
+                        <StatusPill status={{ label: overallStatus, tone: statusTone }} />
+                        {ts && <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>{new Date(ts).toLocaleString()}</span>}
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>{rows.length} item{rows.length !== 1 ? 's' : ''}</span>
+                      </summary>
+                      <div style={{ marginTop: '10px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+                        <strong style={{ color: 'var(--color-text-primary)' }}>Organization:</strong> {firstRow['Org Name'] || org.org_name}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                          Qty
-                          <input type="number" min={1} value={line.quantity}
-                            onChange={e => setLineQty(Number(row), e.target.value)}
-                            style={{ width: '56px', marginLeft: '6px', padding: '4px 6px' }}
-                          />
-                        </label>
-                        {avail && <AvailBadge availInfo={avail} />}
-                        <button type="button" onClick={() => setLineQty(Number(row), 0)}
-                          style={{ marginLeft: 'auto', fontSize: '12px', background: 'none', border: 'none', color: '#A93226', cursor: 'pointer' }}>
-                          Remove
-                        </button>
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginTop: '10px', minWidth: '640px' }}>
+                          <thead>
+                            <tr style={{ color: 'var(--color-text-secondary)', textAlign: 'left', fontSize: '12px', borderBottom: '1px solid var(--color-border-tertiary)' }}>
+                              <th style={{ padding: '12px 8px' }}>Item</th>
+                              <th style={{ padding: '12px 8px', width: '140px' }}>Category</th>
+                              <th style={{ padding: '12px 8px', width: '60px' }}>Qty</th>
+                              <th style={{ padding: '12px 8px', width: '110px' }}>Status</th>
+                              {rows.some(r => r['Review Flag'] === 'TRUE') && <th style={{ padding: '12px 8px', width: '90px' }}>Flag</th>}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map((row, idx) => {
+                              const rowStatus = row['Status'] || 'Under Review';
+                              const rowTone = rowStatus === 'Shipped' ? 'info'
+                                : rowStatus === 'Approved' ? 'ok' : 'warn';
+                              return (
+                                <tr key={idx} style={{ borderBottom: '1px solid var(--color-border-tertiary)' }}>
+                                  <td style={{ padding: '12px 8px', fontWeight: 600 }}>{row['Item Name'] || '—'}</td>
+                                  <td style={{ padding: '12px 8px', color: 'var(--color-text-secondary)' }}>{row['Category'] || '—'}</td>
+                                  <td style={{ padding: '12px 8px' }}>{row['Quantity Requested'] || '—'}</td>
+                                  <td style={{ padding: '12px 8px' }}>
+                                    <StatusPill status={{ label: rowStatus, tone: rowTone }} />
+                                  </td>
+                                  {rows.some(r => r['Review Flag'] === 'TRUE') && (
+                                    <td style={{ padding: '12px 8px' }}>
+                                      {row['Review Flag'] === 'TRUE' && <span style={{ fontSize: '11px', fontWeight: 600, color: '#8B0000' }}>Review needed</span>}
+                                    </td>
+                                  )}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
                       </div>
-                    </li>
+                    </details>
                   );
                 })}
-              </ul>
-              <button type="button" onClick={() => { setCheckoutOpen(true); setSubmitError(null); }}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px', border: 'none',
-                  background: '#185FA5', color: 'white', fontWeight: 600, cursor: 'pointer',
-                }}>
-                Checkout
-              </button>
-            </>
-          )}
-        </aside>
-      )}
+              </>
+            )}
+          </div>
+        )}
 
-      {/* ══════════════════ CHECKOUT MODAL ══════════════════ */}
-      {checkoutOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30, padding: '16px',
-        }}>
-          <div style={{
-            width: 'min(520px, 100%)', background: 'var(--color-background-primary)',
-            borderRadius: '12px', padding: '22px', boxShadow: '0 16px 60px rgba(0,0,0,0.2)',
-            maxHeight: 'calc(100vh - 32px)', overflow: 'auto',
+        {cartOpen && (
+          <aside style={{
+            position: 'fixed',
+            right: 16,
+            top: 24,
+            width: 380,
+            maxWidth: 'calc(100vw - 32px)',
+            maxHeight: 'calc(100vh - 48px)',
+            overflow: 'auto',
+            ...PANEL_STYLE,
+            borderRadius: '24px',
+            padding: '18px',
+            zIndex: 20,
+            background: 'rgba(255,255,255,0.96)',
+            backdropFilter: 'blur(18px)',
           }}>
-            <h3 style={{ margin: '0 0 6px' }}>Confirm your request</h3>
-            <p style={{ margin: '0 0 14px', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-              Please review your items below. Once submitted, Blueprints HQ will follow up within 48 hours.
-            </p>
-
-            {/* Org info */}
-            <div style={{
-              padding: '10px 12px', borderRadius: '8px', marginBottom: '14px',
-              background: 'var(--color-background-secondary)',
-              border: '0.5px solid var(--color-border-tertiary)', fontSize: '13px',
-            }}>
-              <div><strong>Organization:</strong> {org?.org_name}</div>
-              <div style={{ color: 'var(--color-text-secondary)' }}>{org?.org_email}</div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', flex: 1, fontFamily: 'var(--font-display)', fontWeight: 700 }}>Cart</h2>
+              <button type="button" onClick={() => setCartOpen(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '24px' }}>×</button>
             </div>
-
-            {/* Order summary */}
-            <div style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>
-                Items ({cartCount} total)
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ color: 'var(--color-text-secondary)', textAlign: 'left' }}>
-                    <th style={{ padding: '4px 6px', fontWeight: 500 }}>Item</th>
-                    <th style={{ padding: '4px 6px', fontWeight: 500, width: '120px' }}>Category</th>
-                    <th style={{ padding: '4px 6px', fontWeight: 500, width: '50px' }}>Qty</th>
-                    <th style={{ padding: '4px 6px', fontWeight: 500, width: '120px' }}>Availability</th>
-                  </tr>
-                </thead>
-                <tbody>
+            {cartCount === 0 ? (
+              <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>Nothing here yet — add from Browse.</p>
+            ) : (
+              <>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px' }}>
                   {Object.entries(cart).map(([row, line]) => {
                     const nk = pickNameField(line.item);
-                    const cat = parentCategory(line.item);
                     const avail = availMap[Number(row)];
+                    const cat = parentCategory(line.item);
                     return (
-                      <tr key={row} style={{ borderTop: '0.5px solid var(--color-border-tertiary)' }}>
-                        <td style={{ padding: '6px 6px', fontWeight: 500 }}>{line.item[nk] || '—'}</td>
-                        <td style={{ padding: '6px 6px', color: 'var(--color-text-secondary)' }}>{cat}</td>
-                        <td style={{ padding: '6px 6px' }}>{line.quantity}</td>
-                        <td style={{ padding: '6px 6px' }}><AvailBadge availInfo={avail} /></td>
-                      </tr>
+                      <li key={row} style={{
+                        padding: '14px',
+                        border: '1px solid var(--color-border-secondary)',
+                        borderRadius: '16px',
+                        marginBottom: '10px',
+                        background: 'rgba(248,250,252,0.82)',
+                        fontSize: '13px',
+                      }}>
+                        <div style={{ fontWeight: 600, marginBottom: '2px' }}>{line.item[nk]}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
+                          {cat}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                            Qty
+                            <input type="number" min={1} value={line.quantity} onChange={e => setLineQty(Number(row), e.target.value)} style={{ width: '64px', marginLeft: '6px', padding: '6px 8px', borderRadius: '12px', border: '1px solid var(--color-border-secondary)', background: 'white' }} />
+                          </label>
+                          {avail && <AvailBadge availInfo={avail} />}
+                          <button type="button" onClick={() => setLineQty(Number(row), 0)} style={{ marginLeft: 'auto', fontSize: '12px', background: 'none', border: 'none', color: '#A93226', cursor: 'pointer', fontWeight: 700 }}>
+                            Remove
+                          </button>
+                        </div>
+                      </li>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-
-            {submitError && (
-              <p style={{ color: '#A93226', fontSize: '13px', margin: '0 0 10px' }}>{submitError}</p>
+                </ul>
+                <button type="button" onClick={() => { setCheckoutOpen(true); setSubmitError(null); }} style={{ ...PRIMARY_BUTTON, width: '100%', justifyContent: 'center' }}>
+                  Checkout
+                </button>
+              </>
             )}
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => setCheckoutOpen(false)} style={{
-                padding: '9px 14px', borderRadius: '8px',
-                border: '0.5px solid var(--color-border-secondary)',
-                background: 'transparent', cursor: 'pointer',
-              }}>
-                Cancel
-              </button>
-              <button type="button" disabled={submitting || cartCount === 0} onClick={submitOrgRequest}
-                style={{
-                  padding: '9px 16px', borderRadius: '8px', border: 'none',
-                  background: submitting || cartCount === 0 ? '#B0B0B0' : '#185FA5',
-                  color: 'white', fontWeight: 600,
-                  cursor: submitting || cartCount === 0 ? 'default' : 'pointer',
-                }}>
-                {submitting ? 'Submitting…' : 'Submit request'}
-              </button>
+          </aside>
+        )}
+
+        {checkoutOpen && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(17, 12, 10, 0.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30, padding: '16px' }}>
+            <div style={{ width: 'min(560px, 100%)', ...PANEL_STYLE, borderRadius: '24px', padding: '24px', maxHeight: 'calc(100vh - 32px)', overflow: 'auto', background: 'rgba(255,255,255,0.98)' }}>
+              <h3 style={{ margin: '0 0 6px', fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 700 }}>Confirm your request</h3>
+              <p style={{ margin: '0 0 14px', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+                Please review your items below. Once submitted, Blueprints HQ will follow up within 48 hours.
+              </p>
+              <div style={{ padding: '12px 14px', borderRadius: '16px', marginBottom: '14px', background: 'rgba(248,250,252,0.82)', border: '1px solid var(--color-border-secondary)', fontSize: '13px' }}>
+                <div><strong>Organization:</strong> {org?.org_name}</div>
+                <div style={{ color: 'var(--color-text-secondary)' }}>{org?.org_email}</div>
+              </div>
+              <div style={{ marginBottom: '14px', overflowX: 'auto' }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>Items ({cartCount} total)</div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '460px' }}>
+                  <thead>
+                    <tr style={{ color: 'var(--color-text-secondary)', textAlign: 'left', fontSize: '12px', borderBottom: '1px solid var(--color-border-tertiary)' }}>
+                      <th style={{ padding: '12px 6px' }}>Item</th>
+                      <th style={{ padding: '12px 6px', width: '120px' }}>Category</th>
+                      <th style={{ padding: '12px 6px', width: '50px' }}>Qty</th>
+                      <th style={{ padding: '12px 6px', width: '120px' }}>Availability</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(cart).map(([row, line]) => {
+                      const nk = pickNameField(line.item);
+                      const cat = parentCategory(line.item);
+                      const avail = availMap[Number(row)];
+                      return (
+                        <tr key={row} style={{ borderBottom: '1px solid var(--color-border-tertiary)' }}>
+                          <td style={{ padding: '12px 8px', fontWeight: 600 }}>{line.item[nk] || '—'}</td>
+                          <td style={{ padding: '12px 8px', color: 'var(--color-text-secondary)' }}>{cat}</td>
+                          <td style={{ padding: '12px 8px' }}>{line.quantity}</td>
+                          <td style={{ padding: '12px 8px' }}><AvailBadge availInfo={avail} /></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {submitError && <p style={{ color: '#A93226', fontSize: '13px', margin: '0 0 10px' }}>{submitError}</p>}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <button type="button" onClick={() => setCheckoutOpen(false)} style={SECONDARY_BUTTON}>Cancel</button>
+                <button type="button" disabled={submitting || cartCount === 0} onClick={submitOrgRequest} style={{ ...PRIMARY_BUTTON, opacity: submitting || cartCount === 0 ? 0.55 : 1, cursor: submitting || cartCount === 0 ? 'default' : 'pointer' }}>
+                  {submitting ? 'Submitting…' : 'Submit request'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ══════════════════ LOGIN MODAL ══════════════════ */}
-      {loginOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 40, padding: '16px',
-        }}>
-          <div style={{
-            width: 'min(420px, 100%)', background: 'var(--color-background-primary)',
-            borderRadius: '12px', padding: '24px', boxShadow: '0 16px 60px rgba(0,0,0,0.2)',
-          }}>
-            <h3 style={{ margin: '0 0 6px' }}>Sign in to request supplies</h3>
-            <p style={{ margin: '0 0 18px', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-              Enter your organization name and email. This is stored only for your current session.
-            </p>
-
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
-              Organization name
-            </label>
-            <input
-              value={loginName}
-              onChange={e => setLoginName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleLogin()}
-              placeholder="e.g. Riverside Free Clinic"
-              style={{
-                width: '100%', boxSizing: 'border-box', padding: '10px 12px', marginBottom: '12px',
-                borderRadius: '8px', border: '0.5px solid var(--color-border-secondary)', fontSize: '14px',
-              }}
-            />
-
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
-              Email address
-            </label>
-            <input
-              type="email"
-              value={loginEmail}
-              onChange={e => setLoginEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleLogin()}
-              placeholder="e.g. contact@clinic.org"
-              style={{
-                width: '100%', boxSizing: 'border-box', padding: '10px 12px', marginBottom: '12px',
-                borderRadius: '8px', border: '0.5px solid var(--color-border-secondary)', fontSize: '14px',
-              }}
-            />
-
-            {loginError && (
-              <p style={{ color: '#A93226', fontSize: '13px', margin: '0 0 10px' }}>{loginError}</p>
-            )}
-
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => { setLoginOpen(false); setLoginError(''); }}
-                style={{
-                  padding: '9px 14px', borderRadius: '8px',
-                  border: '0.5px solid var(--color-border-secondary)',
-                  background: 'transparent', cursor: 'pointer',
-                }}>
-                Cancel
-              </button>
-              <button type="button" onClick={handleLogin}
-                style={{
-                  padding: '9px 18px', borderRadius: '8px', border: 'none',
-                  background: '#185FA5', color: 'white', fontWeight: 600, cursor: 'pointer',
-                }}>
-                Continue
-              </button>
+        {loginOpen && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(17, 12, 10, 0.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 40, padding: '16px' }}>
+            <div style={{ width: 'min(440px, 100%)', ...PANEL_STYLE, borderRadius: '24px', padding: '24px', background: 'rgba(255,255,255,0.98)' }}>
+              <h3 style={{ margin: '0 0 6px', fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 700 }}>Sign in to request supplies</h3>
+              <p style={{ margin: '0 0 18px', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+                Enter your organization name and email. This is stored only for your current session.
+              </p>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>Organization name</label>
+              <input
+                value={loginName}
+                onChange={e => setLoginName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                placeholder="e.g. Riverside Free Clinic"
+                style={{ width: '100%', padding: '12px 14px', marginBottom: '12px', borderRadius: '14px', border: '1px solid var(--color-border-secondary)', fontSize: '14px', background: 'rgba(255,255,255,0.86)' }}
+              />
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>Email address</label>
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={e => setLoginEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                placeholder="e.g. contact@clinic.org"
+                style={{ width: '100%', padding: '12px 14px', marginBottom: '12px', borderRadius: '14px', border: '1px solid var(--color-border-secondary)', fontSize: '14px', background: 'rgba(255,255,255,0.86)' }}
+              />
+              {loginError && <p style={{ color: '#A93226', fontSize: '13px', margin: '0 0 10px' }}>{loginError}</p>}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <button type="button" onClick={() => { setLoginOpen(false); setLoginError(''); }} style={SECONDARY_BUTTON}>Cancel</button>
+                <button type="button" onClick={handleLogin} style={PRIMARY_BUTTON}>Continue</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

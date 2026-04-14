@@ -50,6 +50,7 @@ REQ_HEADERS = [
 # In USE_SAMPLE_DATA mode there is no sheet to scan for duplicates; keep a process-local set
 # so tests (and browsers) still see the same 409 behavior as production.
 _sample_client_request_ids: set[str] = set()
+_sample_org_request_rows: list[dict[str, str]] = []
 
 
 def _use_sample_data() -> bool:
@@ -324,6 +325,7 @@ class OrgCartItemIn(BaseModel):
     item_name: str = Field(min_length=1, max_length=200)
     category: str = Field(default="", max_length=200)
     quantity: int = Field(ge=1, le=99999)
+    sheet_row: Optional[int] = Field(default=None, ge=2, le=500000)
 
 
 class OrgRequestBody(BaseModel):
@@ -378,37 +380,90 @@ def _review_flag(inventory: list[dict], item_name: str) -> bool:
     return False
 
 
+def _inventory_primary_key(record: dict) -> str:
+    """Return the value from inventory column A for this record."""
+    for key, value in record.items():
+        if key == "_sheet_row":
+            continue
+        return str(value).strip()
+    return ""
+
+
 @app.post("/requests")
 async def submit_org_request(body: OrgRequestBody):
     if _use_sample_data():
+        request_id = _make_request_id()
+        ts = datetime.now(timezone.utc).isoformat()
+        for item in body.items:
+            _sample_org_request_rows.append(
+                {
+                    "Request ID": request_id,
+                    "Org Name": body.org_name,
+                    "Org Email": body.org_email,
+                    "Item Name": item.item_name,
+                    "Category": item.category,
+                    "Quantity Requested": str(item.quantity),
+                    "Status": "Under Review",
+                    "Timestamp": ts,
+                    "Review Flag": "FALSE",
+                }
+            )
         return {
-            "request_id": _make_request_id(),
+            "request_id": request_id,
             "status": "Under Review",
-            "message": "USE_SAMPLE_DATA is on — nothing written to Sheets or emailed.",
+            "message": "USE_SAMPLE_DATA is on — request saved in memory only.",
         }
 
     inventory = get_inventory_records()
     request_id = _make_request_id()
     ts = datetime.now(timezone.utc).isoformat()
 
+    normalized_items: list[dict] = []
+    for item in body.items:
+        snap = _snapshot_row(inventory, item.sheet_row) if item.sheet_row else None
+        item_name = (
+            str(snap.get("Name") or snap.get("name") or item.item_name).strip()
+            if snap
+            else item.item_name
+        )
+        category = (
+            str(snap.get("Category") or snap.get("category") or item.category).strip()
+            if snap
+            else item.category
+        )
+        normalized_items.append(
+            {
+                "item_name": item_name,
+                "category": category,
+                "quantity": item.quantity,
+                "sheet_row": item.sheet_row,
+                "inventory_key": _inventory_primary_key(snap) if snap else "",
+            }
+        )
+
     items_payload = [
-        {"item_name": i.item_name, "category": i.category, "quantity": i.quantity}
-        for i in body.items
+        {
+            "item_name": item["item_name"],
+            "category": item["category"],
+            "quantity": item["quantity"],
+            "inventory_key": item["inventory_key"],
+        }
+        for item in normalized_items
     ]
     review_flagged = [
-        i.item_name for i in body.items if _review_flag(inventory, i.item_name)
+        item["item_name"] for item in normalized_items if _review_flag(inventory, item["item_name"])
     ]
 
     batch: list[list] = []
-    for item in body.items:
-        flag = item.item_name in review_flagged
+    for item in normalized_items:
+        flag = item["item_name"] in review_flagged
         batch.append([
             request_id,
             body.org_name,
             body.org_email,
-            item.item_name,
-            item.category,
-            item.quantity,
+            item["item_name"],
+            item["category"],
+            item["quantity"],
             "Under Review",
             ts,
             "TRUE" if flag else "FALSE",
@@ -430,7 +485,12 @@ async def submit_org_request(body: OrgRequestBody):
 @app.patch("/requests/{request_id}/status")
 async def update_org_request_status(request_id: str, body: StatusUpdateBody):
     if _use_sample_data():
-        return {"request_id": request_id, "status": body.status, "updated_rows": 0}
+        updated_rows = 0
+        for row in _sample_org_request_rows:
+            if row.get("Request ID", "").strip() == request_id:
+                row["Status"] = body.status
+                updated_rows += 1
+        return {"request_id": request_id, "status": body.status, "updated_rows": updated_rows}
 
     spreadsheet = _open_spreadsheet()
     ws = _org_requests_worksheet(spreadsheet)
@@ -577,7 +637,13 @@ async def inventory_availability():
 async def list_org_requests(email: Optional[str] = None):
     """Return org request rows, optionally filtered by org email."""
     if _use_sample_data():
-        return []
+        if not email:
+            return list(_sample_org_request_rows)
+        return [
+            row
+            for row in _sample_org_request_rows
+            if row.get("Org Email", "").strip().lower() == email.strip().lower()
+        ]
 
     spreadsheet = _open_spreadsheet()
     ws = _org_requests_worksheet(spreadsheet)
