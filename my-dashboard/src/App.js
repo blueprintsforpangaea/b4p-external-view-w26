@@ -116,7 +116,7 @@ export default function App() {
   const [submissionSummary, setSubmissionSummary] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/supplies')
+    fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/supplies`)
       .then(r => r.json())
       .then(json => { setData(json); setLoading(false); })
       .catch(() => { setLoadError('Could not connect to server.'); setLoading(false); });
@@ -159,7 +159,7 @@ export default function App() {
     setSubmitError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/requests', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

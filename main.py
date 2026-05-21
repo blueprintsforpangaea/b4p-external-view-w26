@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import smtplib
@@ -17,18 +18,25 @@ load_dotenv()
 app = FastAPI()
 logger = logging.getLogger(__name__)
 
-# CRITICAL: Allow React (port 3000) to talk to Python (port 8000)
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-def get_sheet_data():
-    key_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+def _get_google_creds() -> Credentials:
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    creds = Credentials.from_service_account_file(key_path, scopes=scopes)
+    json_str = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+    if json_str:
+        info = json.loads(json_str)
+        return Credentials.from_service_account_info(info, scopes=scopes)
+    key_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    return Credentials.from_service_account_file(key_path, scopes=scopes)
+
+def get_sheet_data():
+    creds = _get_google_creds()
     client = gspread.authorize(creds)
     
     sheet = client.open_by_key(os.environ.get('GOOGLE_SHEET_ID')).sheet1
@@ -92,10 +100,8 @@ def send_team_request_email(requester_name: str, notes: str, items: list[dict]) 
     recipient = (
         os.environ.get("TEAM_REQUEST_EMAIL", "").strip()
         or os.environ.get("HQ_EMAIL", "").strip()
+        or "sahranha@umich.edu"
     )
-    if not recipient:
-        logger.warning("TEAM_REQUEST_EMAIL/HQ_EMAIL not configured; request email skipped.")
-        return
 
     item_rows = "".join(
         (
