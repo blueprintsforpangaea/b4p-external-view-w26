@@ -829,7 +829,6 @@ export default function App() {
               groups.parentKeys.map(parent => {
                 const subs = groups.parents.get(parent);
                 const subKeys = [...subs.keys()].sort(sortMiscLast);
-                const pal = paletteForKey(parent);
                 return (
                   <section key={parent} style={{
                     ...PANEL_STYLE,
