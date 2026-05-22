@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "cd my-dashboard && npm run build",
   "outputDirectory": "my-dashboard/build",
   "installCommand": "cd my-dashboard && npm install",
-  "framework": "create-react-app"
+  "framework": null
 }
