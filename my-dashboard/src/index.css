@@ -1,13 +1,89 @@
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #9ca3af;
+  --color-text-danger: #a93226;
+  --color-text-success: #2f5c12;
+  --color-background-primary: rgba(255, 255, 255, 0.92);
+  --color-background-secondary: rgba(248, 250, 252, 0.92);
+  --color-background-tertiary: #eef2f7;
+  --color-background-success: #e8f4e0;
+  --color-border-secondary: #d6dde8;
+  --color-border-tertiary: #e7ecf3;
+  --color-border-success: #b8d6a3;
+  --color-panel-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+  --accent-blue: #0a84ff;
+  --accent-blue-dark: #0066cc;
+  --requested-row: #fff8c7;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(10, 132, 255, 0.12), transparent 28%),
+    linear-gradient(180deg, #f7f9fc 0%, #eef3f9 100%);
+  color: var(--color-text-primary);
+  min-height: 100vh;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  color: var(--color-text-primary);
+}
+
+button,
+input,
+select,
+textarea {
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid rgba(63, 102, 219, 0.24);
+  outline-offset: 2px;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: '>';
+  display: inline-block;
+  margin-right: 10px;
+  transform: rotate(0deg);
+  transition: transform 0.15s ease;
+  color: var(--accent-blue);
+  font-weight: 700;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  min-height: 100vh;
 }
