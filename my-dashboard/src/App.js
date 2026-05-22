@@ -142,17 +142,6 @@ function supplyStatusFromReview(item) {
   return { label: 'See warehouse notes', tone: 'muted' };
 }
 
-function paletteForKey(label) {
-  let h = 0;
-  const s = String(label);
-  for (let i = 0; i < s.length; i += 1) h = s.charCodeAt(i) + ((h << 5) - h);
-  const hue = Math.abs(h) % 360;
-  return {
-    bg: `hsl(${hue} 42% 90%)`,
-    fg: `hsl(${hue} 38% 22%)`,
-    border: `hsl(${hue} 30% 78%)`,
-  };
-}
 
 function buildGroups(items, query, parentFilter, subFilter) {
   const q = query.toLowerCase().trim();
