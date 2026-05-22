@@ -9,6 +9,9 @@ venv/
 # Google Cloud Key (The actual JSON file itself)
 *.json
 !vercel.json
+!my-dashboard/package.json
+!my-dashboard/package-lock.json
+!my-dashboard/public/*.json
 
 # Python cache (Speeds up execution, but messy to share)
 __pycache__/
