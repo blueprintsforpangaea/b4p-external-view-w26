@@ -8,6 +8,7 @@ venv/
 
 # Google Cloud Key (The actual JSON file itself)
 *.json
+!vercel.json
 
 # Python cache (Speeds up execution, but messy to share)
 __pycache__/
