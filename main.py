@@ -130,6 +130,14 @@ def _open_spreadsheet():
     return client.open_by_key(sheet_id)
 
 
+def _open_requests_spreadsheet():
+    sheet_id = os.environ.get("REQUESTS_SHEET_ID") or os.environ.get("GOOGLE_SHEET_ID")
+    if not sheet_id:
+        raise HTTPException(status_code=500, detail="Missing REQUESTS_SHEET_ID.")
+    client = _gspread_client()
+    return client.open_by_key(sheet_id)
+
+
 def get_requests_worksheet(spreadsheet: gspread.Spreadsheet):
     title = os.environ.get("REQUESTS_WORKSHEET_TITLE", "Requests").strip()
     try:
@@ -210,7 +218,7 @@ async def list_requests():
     if _use_sample_data():
         return []
 
-    spreadsheet = _open_spreadsheet()
+    spreadsheet = _open_requests_spreadsheet()
     ws = get_requests_worksheet(spreadsheet)
     ensure_request_headers(ws)
     return read_request_rows(ws)
@@ -240,7 +248,7 @@ async def submit_request(body: SubmitRequestBody):
             "lines": len(body.items),
         }
 
-    spreadsheet = _open_spreadsheet()
+    spreadsheet = _open_requests_spreadsheet()
     ws = get_requests_worksheet(spreadsheet)
     ensure_request_headers(ws)
 
@@ -387,7 +395,7 @@ async def submit_org_request(body: OrgRequestBody):
             "TRUE" if flag else "FALSE",
         ])
 
-    spreadsheet = _open_spreadsheet()
+    spreadsheet = _open_requests_spreadsheet()
     ws = _org_requests_worksheet(spreadsheet)
     try:
         ws.append_rows(batch, value_input_option="USER_ENTERED")
@@ -410,7 +418,7 @@ async def update_org_request_status(request_id: str, body: StatusUpdateBody):
                 updated_rows += 1
         return {"request_id": request_id, "status": body.status, "updated_rows": updated_rows}
 
-    spreadsheet = _open_spreadsheet()
+    spreadsheet = _open_requests_spreadsheet()
     ws = _org_requests_worksheet(spreadsheet)
     all_rows = ws.get_all_values()
 
@@ -472,7 +480,7 @@ async def inventory_availability():
     org_requests: list[dict] = []
     if not _use_sample_data():
         try:
-            spreadsheet = _open_spreadsheet()
+            spreadsheet = _open_requests_spreadsheet()
             ws = _org_requests_worksheet(spreadsheet)
             all_rows = ws.get_all_values()
             if len(all_rows) > 1:
@@ -529,7 +537,7 @@ async def list_org_requests(email: Optional[str] = None):
             return list(_sample_org_request_rows)
         return [r for r in _sample_org_request_rows if r.get("Org Email", "").strip().lower() == email.strip().lower()]
 
-    spreadsheet = _open_spreadsheet()
+    spreadsheet = _open_requests_spreadsheet()
     ws = _org_requests_worksheet(spreadsheet)
     all_rows = ws.get_all_values()
 
