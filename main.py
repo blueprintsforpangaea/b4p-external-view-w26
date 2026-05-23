@@ -357,7 +357,7 @@ def _inventory_primary_key(record: dict) -> str:
 
 
 @app.post("/requests")
-async def submit_org_request(body: OrgRequestBody):
+def submit_org_request(body: OrgRequestBody):
     if _use_sample_data():
         request_id = _make_request_id()
         ts = datetime.now(timezone.utc).isoformat()
@@ -370,35 +370,19 @@ async def submit_org_request(body: OrgRequestBody):
             })
         return {"request_id": request_id, "status": "Under Review", "message": "USE_SAMPLE_DATA mode."}
 
-    inventory = get_inventory_records()
     request_id = _make_request_id()
     ts = datetime.now(timezone.utc).isoformat()
 
-    normalized_items: list[dict] = []
-    for item in body.items:
-        snap = _snapshot_row(inventory, item.sheet_row) if item.sheet_row else None
-        item_name = (str(snap.get("Name") or snap.get("name") or item.item_name).strip() if snap else item.item_name)
-        category = (str(snap.get("Category") or snap.get("category") or item.category).strip() if snap else item.category)
-        normalized_items.append({
-            "item_name": item_name, "category": category,
-            "quantity": item.quantity, "sheet_row": item.sheet_row,
-            "inventory_key": _inventory_primary_key(snap) if snap else "",
-        })
-
     items_payload = [
-        {"item_name": i["item_name"], "category": i["category"], "quantity": i["quantity"], "inventory_key": i["inventory_key"]}
-        for i in normalized_items
+        {"item_name": item.item_name, "category": item.category, "quantity": item.quantity, "inventory_key": ""}
+        for item in body.items
     ]
-    review_flagged = [i["item_name"] for i in normalized_items if _review_flag(inventory, i["item_name"])]
 
-    batch: list[list] = []
-    for item in normalized_items:
-        flag = item["item_name"] in review_flagged
-        batch.append([
-            request_id, body.org_name, body.org_email, item["item_name"],
-            item["category"], item["quantity"], "Under Review", ts,
-            "TRUE" if flag else "FALSE",
-        ])
+    batch: list[list] = [
+        [request_id, body.org_name, body.org_email, item.item_name,
+         item.category, item.quantity, "Under Review", ts, "FALSE"]
+        for item in body.items
+    ]
 
     spreadsheet = _open_requests_spreadsheet()
     ws = _org_requests_worksheet(spreadsheet)
@@ -408,7 +392,7 @@ async def submit_org_request(body: OrgRequestBody):
         raise HTTPException(status_code=502, detail=f"Google Sheets error: {exc}") from exc
 
     email_svc.send_org_confirmation(body.org_name, body.org_email, items_payload, request_id)
-    email_svc.send_hq_alert(body.org_name, body.org_email, items_payload, ts, review_flagged)
+    email_svc.send_hq_alert(body.org_name, body.org_email, items_payload, ts, [])
 
     return {"request_id": request_id, "status": "Under Review"}
 
