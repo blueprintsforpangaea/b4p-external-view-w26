@@ -391,9 +391,6 @@ def submit_org_request(body: OrgRequestBody):
     except gspread.exceptions.APIError as exc:
         raise HTTPException(status_code=502, detail=f"Google Sheets error: {exc}") from exc
 
-    email_svc.send_org_confirmation(body.org_name, body.org_email, items_payload, request_id)
-    email_svc.send_hq_alert(body.org_name, body.org_email, items_payload, ts, [])
-
     return {"request_id": request_id, "status": "Under Review"}
 
 
