@@ -554,10 +554,13 @@ export default function App() {
     if (!lines.length) return;
     setSubmitting(true);
     setSubmitError(null);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
     try {
       const res = await fetch(`${apiBase}/requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           org_name: org.org_name,
           org_email: org.org_email,
@@ -575,7 +578,6 @@ export default function App() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setSubmitError(body.detail || 'Request failed. Please try again.');
-        setSubmitting(false);
         return;
       }
       setDoneBanner(`Request ${body.request_id} submitted! We'll follow up within 48 hours.`);
@@ -584,10 +586,16 @@ export default function App() {
       setCartWarning(null);
       reloadOrgReq();
       reloadAvail();
-    } catch {
-      setSubmitError('Network error — please try again.');
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        setSubmitError('Request timed out — the server may be starting up. Please try again in 30 seconds.');
+      } else {
+        setSubmitError('Network error — please try again.');
+      }
+    } finally {
+      clearTimeout(timeout);
+      setSubmitting(false);
     }
-    setSubmitting(false);
   }, [org, cart, clearCart, reloadOrgReq, reloadAvail]);
 
   // ── Group org requests by Request ID for My Requests tab ──────────────────
