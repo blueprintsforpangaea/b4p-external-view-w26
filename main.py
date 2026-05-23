@@ -208,6 +208,11 @@ def _snapshot_row(inventory: list[dict], sheet_row: int) -> Optional[dict]:
     return None
 
 
+@app.get("/health")
+async def health():
+    return {"ok": True}
+
+
 @app.get("/api/supplies")
 async def supplies():
     return get_inventory_records()
