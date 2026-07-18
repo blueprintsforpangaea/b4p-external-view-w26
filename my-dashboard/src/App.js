@@ -434,6 +434,7 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [doneBanner, setDoneBanner] = useState(null);
+  const [quantityToAdd, setQuantityToAdd] = useState({});
 
   const parentOptions = useMemo(() => {
     const set = new Set(data.map(parentCategory));
@@ -950,7 +951,30 @@ export default function App() {
                                                 >
                                                   −
                                                 </button>
-                                                <button type="button" onClick={() => handleAddToCart(it, 1)} style={{ ...PRIMARY_BUTTON, padding: '7px 14px', boxShadow: 'none' }}>
+                                                <input 
+                                                  type="number" 
+                                                  min={1} 
+                                                  max={st} 
+                                                  value={quantityToAdd[row] ?? 1} 
+                                                  onChange={e => {
+                                                    setQuantityToAdd(previousValues => ({
+                                                      ...previousValues,
+                                                      [row]: Math.max(1, Number(e.target.value) || 1),
+                                                    }))
+                                                  }}
+                                                  style={{ width: '64px', marginRight: '6px', padding: '6px 8px', borderRadius: '12px', border: '1px solid var(--color-border-secondary)', background: 'white' }} />
+                                                <button 
+                                                  type="button" 
+                                                  onClick={() => {
+                                                      handleAddToCart(it, quantityToAdd[row] ?? 1);
+                                                      setQuantityToAdd(previousValues => {
+                                                        const newValues = {...previousValues};
+                                                        delete newValues[row];
+                                                        return newValues;
+                                                      })
+                                                    }
+                                                  } 
+                                                  style={{ ...PRIMARY_BUTTON, padding: '7px 14px', boxShadow: 'none' }}>
                                                   Add
                                                 </button>
                                                 {inCart > 0 && (
