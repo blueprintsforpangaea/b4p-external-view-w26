@@ -912,7 +912,7 @@ export default function App() {
                                           const isRequested = avail?.availability_status === 'Requested';
                                           return (
                                             <tr key={row} style={{
-                                              background: isRequested ? 'var(--requested-row)' : 'transparent',
+                                              background: 'transparent',
                                               borderBottom: '1px solid var(--color-border-tertiary)',
                                             }}
                                             >
