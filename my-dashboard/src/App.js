@@ -130,19 +130,6 @@ function parseStockQuantity(item) {
   return n;
 }
 
-function supplyStatusFromReview(item) {
-  const r = String(item.Review ?? item.review ?? '').trim().toLowerCase();
-  if (!r) return { label: 'Status unknown', tone: 'muted' };
-  if (r.includes('shipped')) return { label: 'Shipped', tone: 'info' };
-  if (r.includes('approved')) return { label: 'Approved', tone: 'ok' };
-  if (r.includes('pending') || r.includes('under review') || r.includes('requested')) {
-    return { label: 'Under review', tone: 'warn' };
-  }
-  if (r.includes('no review')) return { label: 'Available', tone: 'ok' };
-  return { label: 'See warehouse notes', tone: 'muted' };
-}
-
-
 function buildGroups(items, query, parentFilter, subFilter) {
   const q = query.toLowerCase().trim();
   const filtered = items.filter(item => {
@@ -895,9 +882,7 @@ export default function App() {
                                           <th style={{ padding: '12px 10px' }}>Item</th>
                                           <th style={{ padding: '12px 10px', width: '140px' }}>Manufacturer</th>
                                           <th style={{ padding: '12px 10px', width: '70px' }}>Qty</th>
-                                          <th style={{ padding: '12px 10px', width: '110px' }}>Status</th>
                                           <th style={{ padding: '12px 10px', width: '150px' }}>Availability</th>
-                                          <th style={{ padding: '12px 10px', width: '180px' }}>Requested by</th>
                                           <th style={{ padding: '12px 10px', width: '130px' }} />
                                         </tr>
                                       </thead>
@@ -905,7 +890,6 @@ export default function App() {
                                         {items.map(it => {
                                           const nk = pickNameField(it);
                                           const st = parseStockQuantity(it);
-                                          const status = supplyStatusFromReview(it);
                                           const row = it._sheet_row;
                                           const avail = availMap[row];
                                           const inCart = cart[row]?.quantity || 0;
@@ -927,13 +911,7 @@ export default function App() {
                                               </td>
                                               <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>{st != null ? st : '—'}</td>
                                               <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>
-                                                <StatusPill status={status} />
-                                              </td>
-                                              <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>
                                                 <AvailBadge availInfo={avail} />
-                                              </td>
-                                              <td style={{ padding: '14px 10px', verticalAlign: 'top', fontWeight: 600, color: isRequested ? '#7A6A00' : 'var(--color-text-secondary)' }}>
-                                                {isRequested && avail.requesting_org ? `Requested by: ${avail.requesting_org}` : '—'}
                                               </td>
                                               <td style={{ padding: '14px 10px', verticalAlign: 'top', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                                 <button
