@@ -252,7 +252,7 @@ function AvailBadge({ availInfo }) {
   const c = AVAIL_COLORS[availability_status] || AVAIL_COLORS.Available;
   let label = availability_status;
   if (availability_status === 'Requested' && requesting_org) {
-    label = `Requested by ${requesting_org}`;
+    label = `Waitlist`;
   } else if (availability_status === 'Limited') {
     label = 'Low Stock';
   }
@@ -487,7 +487,7 @@ export default function App() {
       if (avail) {
         if (avail.availability_status === 'Requested' && avail.requesting_org) {
           setCartWarning(
-            `This item has been requested by ${avail.requesting_org}. HQ will confirm availability upon review.`
+            `This item has been requested by other clinics. You are on a waitlist, and HQ will confirm availability upon review.`
           );
         } else if (avail.availability_status === 'Limited') {
           setCartWarning('This item has low stock. HQ will confirm availability upon review.');
