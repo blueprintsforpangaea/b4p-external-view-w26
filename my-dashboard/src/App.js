@@ -623,24 +623,23 @@ export default function App() {
 
     const orgName = org?.org_name || 'Guest Clinic';
     const orgEmail = org?.org_email || 'unlisted-request@clinic.org';
-
-    const brandPart = unlistedBrand.trim() ? ` [Brand: ${unlistedBrand.trim()}]` : '';
-    const notesPart = unlistedNotes.trim() ? ` [Notes: ${unlistedNotes.trim()}]` : '';
-    const fullItemName = `[UNLISTED REQUEST] ${name}${brandPart}${notesPart}`;
-
+    const productType = unlistedType.trim() || 'Other';
+    const brand = unlistedBrand.trim() || '';
+    const notes = unlistedNotes.trim() || '';
+    
+const brandManufacturer = unlistedBrand.trim() || null; 
     try {
-      const res = await fetch(`${apiBase}/requests`, {
+      const res = await fetch(`${apiBase}/wishlist-requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          org_name: orgName,
-          org_email: orgEmail,
-          items: [{
-            item_name: fullItemName,
-            category: unlistedType,
-            quantity: qty,
-            sheet_row: -1,
-          }],
+          clinic_name: orgName,
+          clinic_email: orgEmail,
+          product_type: productType,
+          product_name: name,
+          quantity_needed: qty,
+          brand_manufacturer: brand,
+          additional_details: notes
         }),
       });
       const body = await res.json().catch(() => ({}));

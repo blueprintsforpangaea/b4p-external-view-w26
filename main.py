@@ -287,6 +287,25 @@ async def submit_request(body: SubmitRequestBody):
 
     return {"ok": True, "request_group_id": group_id, "lines": len(batch), "submitted_at_utc": ts}
 
+def _wishlist_requests_worksheet(spreadsheet: gspread.Spreadsheet) -> gspread.Worksheet:
+    title = os.environ.get("WISHLIST_WORKSHEET_TITLE", "Wishlist Requests").strip()
+    try:
+        ws = spreadsheet.worksheet(title)
+    except gspread.WorksheetNotFound:
+        ws = spreadsheet.add_worksheet(title=title, rows=3000, cols=len(WISHLIST_HEADERS) + 2)
+
+    rows = ws.get_all_values()
+    first_row = rows[0] if rows else []
+    has_header_row = bool(first_row) and any(str(cell).strip() for cell in first_row)
+
+    if not has_header_row:
+        ws.append_row(WISHLIST_HEADERS, value_input_option="USER_ENTERED")
+    elif first_row[0] != WISHLIST_HEADERS[0]:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Worksheet '{title}' has unexpected headers. Expected 'Request ID'.",
+        )
+    return ws
 
 ORG_REQ_HEADERS = [
     "Request ID", "Org Name", "Org Email", "Item Name",
@@ -310,6 +329,27 @@ class OrgRequestBody(BaseModel):
 class StatusUpdateBody(BaseModel):
     status: Literal["Approved", "Shipped"]
 
+WISHLIST_HEADERS = [
+    "Request ID",
+    "Org Name",
+    "Org Email",
+    "Category",
+    "Item Name",
+    "Quantity Requested",
+    "Manufacturer Name",
+    "Notes",
+    "Timestamp",
+]
+
+
+class WishlistRequestBody(BaseModel):
+    clinic_name: str = Field(min_length=1, max_length=200)
+    clinic_email: str = Field(min_length=1, max_length=254)
+    product_type: str = Field(default="", max_length=200)
+    product_name: str = Field(min_length=1, max_length=200)
+    quantity_needed: int = Field(ge=1, le=99999)
+    brand_manufacturer: str = Field(default="", max_length=200)
+    additional_details: str = Field(default="", max_length=4000)
 
 def _make_request_id() -> str:
     ts = int(datetime.now(timezone.utc).timestamp())
@@ -541,3 +581,28 @@ async def list_org_requests(email: Optional[str] = None):
         result.append(row_dict)
 
     return result
+@app.post("/wishlist-requests")
+def submit_wishlist_request(body: WishlistRequestBody):
+    request_id = _make_request_id()
+    ts = datetime.now(timezone.utc).isoformat()
+
+    row = [
+        request_id,
+        body.clinic_name,
+        body.clinic_email,
+        body.product_type,
+        body.product_name,
+        body.quantity_needed,
+        body.brand_manufacturer,
+        body.additional_details,
+        ts,
+    ]
+
+    spreadsheet = _open_requests_spreadsheet()
+    ws = _wishlist_requests_worksheet(spreadsheet)
+    try:
+        ws.append_row(row, value_input_option="USER_ENTERED")
+    except gspread.exceptions.APIError as exc:
+        raise HTTPException(status_code=502, detail=f"Google Sheets error: {exc}") from exc
+
+    return {"request_id": request_id, "status": "Submitted"}
