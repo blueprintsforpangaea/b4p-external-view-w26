@@ -645,7 +645,8 @@ export default function App() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setUnlistedError(body.detail || 'Failed to submit request. Please try again.');
+        let errorMessage = 'Failed to submit request. Please try again.';
+        setUnlistedError(errorMessage);
         return;
       }
       setDoneBanner(`Custom supply request submitted (ID: ${body.request_id || 'Submitted'})! Our team will review it.`);
