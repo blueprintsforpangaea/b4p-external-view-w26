@@ -827,7 +827,7 @@ const brandManufacturer = unlistedBrand.trim() || null;
             ...PANEL_STYLE,
             marginBottom: '16px',
             padding: '14px 18px',
-            background: '#FFF8C5',
+            background: '#cbdbff',
             color: '#7A6A00',
             display: 'flex',
             justifyContent: 'space-between',
@@ -850,8 +850,8 @@ const brandManufacturer = unlistedBrand.trim() || null;
                 marginBottom: '16px',
                 padding: '16px 20px',
                 borderRadius: '16px',
-                background: 'linear-gradient(135deg, #FFF8F0 0%, #FFF1E6 100%)',
-                border: '1px solid #FCD3A1',
+                background: 'linear-gradient(135deg, #cbdbff 70%)',
+                border: '1px solid #cbdbff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -859,8 +859,8 @@ const brandManufacturer = unlistedBrand.trim() || null;
                 flexWrap: 'wrap'
               }}>
                 <div>
-                  <strong style={{ color: '#D9381E', fontSize: '15px' }}>Can't find a product or supply?</strong>
-                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#5A4A42' }}>
+                  <strong style={{ color: '#000e3f', fontSize: '15px' }}>Can't find a product or supply?</strong>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#0035a2' }}>
                     If a medical supply is out of stock or unavailable in our inventory, submit a custom request.
                   </p>
                 </div>
@@ -869,12 +869,12 @@ const brandManufacturer = unlistedBrand.trim() || null;
                   onClick={() => setTab('request-unlisted')}
                   style={{
                     ...PRIMARY_BUTTON,
-                    background: '#D9381E',
+                    background: 'rgb(55, 60, 130)',
                     color: 'white',
                     border: 'none',
                     padding: '8px 18px',
                     fontSize: '13px',
-                    boxShadow: '0 4px 12px rgba(217, 56, 30, 0.25)'
+                    boxShadow: '0 4px 12px rgba(55, 60, 130, 0.25)'
                   }}
                 >
                   Request unlisted supply →
@@ -1174,12 +1174,12 @@ const brandManufacturer = unlistedBrand.trim() || null;
         {tab === 'request-unlisted' && (
           <div style={{ ...PANEL_STYLE, padding: '32px', background: '#FFFCFA', border: '1px solid #F5E6D3' }}>
             <div style={{
-              background: '#D9381E',
+              background: 'rgb(55, 60, 130)',
               color: '#FFFFFF',
               borderRadius: '20px',
               padding: '24px 28px',
               marginBottom: '28px',
-              boxShadow: '0 8px 24px rgba(217, 56, 30, 0.18)',
+              boxShadow: '0 8px 24px rgba(55, 60, 130, 0.18)',
             }}>
               <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.9 }}>
                 Clinic Product Feedback & Custom Requests
@@ -1326,10 +1326,10 @@ const brandManufacturer = unlistedBrand.trim() || null;
                   disabled={unlistedSubmitting}
                   style={{
                     ...PRIMARY_BUTTON,
-                    background: '#D9381E',
+                    background: 'rgb(55, 60, 130)',
                     padding: '12px 28px',
                     fontSize: '15px',
-                    boxShadow: '0 6px 18px rgba(217, 56, 30, 0.28)',
+                    boxShadow: '0 6px 18px rgba(55, 60, 130, 0.28)',
                     opacity: unlistedSubmitting ? 0.6 : 1,
                     cursor: unlistedSubmitting ? 'default' : 'pointer',
                   }}
