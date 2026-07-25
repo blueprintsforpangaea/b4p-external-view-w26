@@ -827,7 +827,7 @@ const brandManufacturer = unlistedBrand.trim() || null;
             ...PANEL_STYLE,
             marginBottom: '16px',
             padding: '14px 18px',
-            background: '#cbdbff',
+            background: '#FFF8C5',
             color: '#7A6A00',
             display: 'flex',
             justifyContent: 'space-between',
