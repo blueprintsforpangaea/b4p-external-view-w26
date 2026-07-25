@@ -730,13 +730,6 @@ export default function App() {
           </div>
         </section>
 
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-          <MetricCard label="Inventory rows" value={summaryCounts.totalItems} accent="rgba(255,255,255,0.86)" />
-          <MetricCard label="Warehouse categories" value={summaryCounts.categories} accent="rgba(248,250,252,0.92)" />
-          <MetricCard label="Items requested" value={summaryCounts.requested} accent="rgba(255,250,219,0.92)" />
-          <MetricCard label="Low stock rows" value={summaryCounts.limited} accent="rgba(255,244,235,0.92)" />
-        </section>
-
         {doneBanner && (
           <div style={{
             ...PANEL_STYLE,
