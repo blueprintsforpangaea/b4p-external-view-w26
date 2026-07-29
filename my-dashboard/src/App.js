@@ -882,7 +882,6 @@ export default function App() {
                                           <th style={{ padding: '12px 10px' }}>Item</th>
                                           <th style={{ padding: '12px 10px', width: '140px' }}>Manufacturer</th>
                                           <th style={{ padding: '12px 10px', width: '70px' }}>Qty</th>
-                                          <th style={{ padding: '12px 10px', width: '150px' }}>Availability</th>
                                           <th style={{ padding: '12px 10px', width: '130px' }} />
                                         </tr>
                                       </thead>
@@ -891,9 +890,7 @@ export default function App() {
                                           const nk = pickNameField(it);
                                           const st = parseStockQuantity(it);
                                           const row = it._sheet_row;
-                                          const avail = availMap[row];
                                           const inCart = cart[row]?.quantity || 0;
-                                          const isRequested = avail?.availability_status === 'Requested';
                                           return (
                                             <tr key={row} style={{
                                               background: 'transparent',
@@ -910,9 +907,6 @@ export default function App() {
                                                 {it['Manufacturer Name'] || '—'}
                                               </td>
                                               <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>{st != null ? st : '—'}</td>
-                                              <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>
-                                                <AvailBadge availInfo={avail} />
-                                              </td>
                                               <td style={{ padding: '14px 10px', verticalAlign: 'top', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                                 <button
                                                   type="button"
