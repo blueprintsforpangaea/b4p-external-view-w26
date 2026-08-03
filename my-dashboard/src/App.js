@@ -691,41 +691,47 @@ export default function App() {
                 Medical Supplies Request System
               </div>
             </div>
-
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginTop: '24px' }}>
-              <TabButton active={tab === 'browse'} onClick={() => setTab('browse')}>
-                Browse & request
-              </TabButton>
-              <TabButton active={tab === 'my-requests'} onClick={() => {
-                if (!org) { setLoginOpen(true); return; }
-                setTab('my-requests');
-                reloadOrgReq();
-              }}
-              >
-                My Requests
-              </TabButton>
-              <button
-                type="button"
-                onClick={() => {
+            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginTop: '24px' }}>
+                <TabButton active={tab === 'browse'} onClick={() => setTab('browse')}>
+                  Browse & request
+                </TabButton>
+                <TabButton active={tab === 'my-requests'} onClick={() => {
                   if (!org) { setLoginOpen(true); return; }
-                  setCartOpen(v => !v);
+                  setTab('my-requests');
+                  reloadOrgReq();
                 }}
-                style={{ ...PRIMARY_BUTTON, position: 'relative' }}
-              >
-                Cart{cartCount > 0 ? ` (${cartCount})` : ''}
-                {cartCount > 0 && (
-                  <span style={{
-                    position: 'absolute', top: '-10px', right: '-6px',
-                    background: 'var(--bauhaus-red)', color: 'white', fontSize: '11px',
-                    minWidth: '22px', height: '22px', borderRadius: '999px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '2px solid var(--color-border-secondary)',
+                >
+                  My Requests
+                </TabButton>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!org) { setLoginOpen(true); return; }
+                    setCartOpen(v => !v);
                   }}
-                  >
-                    {cartCount > 99 ? '99+' : cartCount}
-                  </span>
-                )}
-              </button>
+                  style={{ ...PRIMARY_BUTTON, position: 'relative' }}
+                >
+                  Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+                  {cartCount > 0 && (
+                    <span style={{
+                      position: 'absolute', top: '-10px', right: '-6px',
+                      background: 'var(--bauhaus-red)', color: 'white', fontSize: '11px',
+                      minWidth: '22px', height: '22px', borderRadius: '999px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: '2px solid var(--color-border-secondary)',
+                    }}
+                    >
+                      {cartCount > 99 ? '99+' : cartCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+              <div style={{marginTop: '24px'}}>
+                <a href={process.env.REACT_APP_FEEDBACK_FORM_LINK} target="_blank" style={{...SECONDARY_BUTTON, display: 'block', padding: '10px 18px', color: 'var(--color-text-secondary)', fontSize: '14px', textDecoration: 'none', position: 'relative',}} title="Give us feedback!">
+                  Feedback
+                </a>
+              </div>
             </div>
           </div>
         </section>
