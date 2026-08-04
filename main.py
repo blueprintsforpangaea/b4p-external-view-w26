@@ -215,7 +215,71 @@ async def health():
 
 @app.get("/api/supplies")
 async def supplies():
-    return get_inventory_records()
+    inventory = get_inventory_records()
+
+    # 1. Fetch all existing requests
+    org_requests = []
+    if _use_sample_data():
+        org_requests = list(_sample_org_request_rows)
+    else:
+        try:
+            spreadsheet = _open_requests_spreadsheet()
+            ws = _org_requests_worksheet(spreadsheet)
+            all_rows = ws.get_all_values()
+            if len(all_rows) > 1:
+                header = all_rows[0]
+                for r in all_rows[1:]:
+                    if any(cell.strip() for cell in r):
+                        org_requests.append({header[j]: (r[j] if j < len(r) else "") for j in range(len(header))})
+        except Exception:
+            pass
+
+    # 2. Sum up pending quantities per item
+    pending_quantities = {}
+    for req in org_requests:
+        status = req.get("Status", "").strip()
+        # Deduct quantities for requests that have not yet been shipped
+        if status in ["Under Review", "Pending", "Approved"]:
+            item_name = req.get("Item Name", "").strip().lower()
+            try:
+                qty = int(str(req.get("Quantity Requested", "0")).replace(",", ""))
+                pending_quantities[item_name] = pending_quantities.get(item_name, 0) + qty
+            except ValueError:
+                pass
+
+    # 3. Deduct from available inventory
+    for rec in inventory:
+        item_name = (rec.get("Name") or rec.get("name") or "").strip().lower()
+        if item_name in pending_quantities:
+            # Support either "Quantity" or "quantity" as the column name
+            qty_key = "Quantity" if "Quantity" in rec else "quantity" if "quantity" in rec else None
+            if qty_key:
+                try:
+                    current_qty = int(str(rec[qty_key]).replace(",", ""))
+                    # Calculate new amount (preventing it from dropping below 0)
+                    new_qty = max(0, current_qty - pending_quantities[item_name])
+                    rec[qty_key] = str(new_qty)
+                except ValueError:
+                    pass
+
+    # 4. Filter out items with 0 stock
+    available_inventory = []
+    for rec in inventory:
+        qty_key = "Quantity" if "Quantity" in rec else "quantity" if "quantity" in rec else None
+        
+        if qty_key:
+            try:
+                # Check if the remaining quantity is greater than 0
+                qty = int(str(rec[qty_key]).replace(",", ""))
+                if qty > 0:
+                    available_inventory.append(rec)
+            except ValueError:
+                # If quantity is "N/A" or text, keep it in the list just in case
+                available_inventory.append(rec)
+        else:
+            available_inventory.append(rec)
+
+    return available_inventory
 
 
 @app.get("/api/requests")
