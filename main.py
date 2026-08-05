@@ -421,7 +421,29 @@ def _inventory_primary_key(record: dict) -> str:
 
 
 @app.post("/requests")
-def submit_org_request(body: OrgRequestBody):
+async def submit_org_request(body: OrgRequestBody): # Changed to async def
+    # Fetch the exact up-to-date inventory numbers right now
+    current_inventory = await supplies()
+    
+    # Check if they are trying to order more than what is available
+    for item in body.items:
+        found_item = next((rec for rec in current_inventory if (rec.get("Name") or rec.get("name") or "").strip().lower() == item.item_name.strip().lower()), None)
+        
+        if not found_item:
+            raise HTTPException(status_code=400, detail=f"'{item.item_name}' is no longer available.")
+            
+        qty_key = "Quantity" if "Quantity" in found_item else "quantity" if "quantity" in found_item else None
+        if qty_key:
+            try:
+                available_qty = int(str(found_item[qty_key]).replace(",", ""))
+                if item.quantity > available_qty:
+                    if available_qty == 0:
+                        raise HTTPException(status_code=400, detail=f"'{item.item_name}' just ran out of stock!")
+                    else:
+                        raise HTTPException(status_code=400, detail=f"Cannot order {item.quantity} of '{item.item_name}'. Only {available_qty} left.")
+            except ValueError:
+                pass
+
     if _use_sample_data():
         request_id = _make_request_id()
         ts = datetime.now(timezone.utc).isoformat()
