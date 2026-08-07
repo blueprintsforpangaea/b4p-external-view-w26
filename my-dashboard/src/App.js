@@ -435,6 +435,9 @@ export default function App() {
   const [submitError, setSubmitError] = useState(null);
   const [doneBanner, setDoneBanner] = useState(null);
 
+  // Image popup
+  const [showImagePopup, setShowImagePopup] = useState({});
+
   const parentOptions = useMemo(() => {
     const set = new Set(data.map(parentCategory));
     return ['All', ...[...set].sort((a, b) => a.localeCompare(b))];
@@ -892,6 +895,7 @@ export default function App() {
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '900px' }}>
                                       <thead>
                                         <tr style={{ color: 'var(--color-text-secondary)', textAlign: 'left', fontSize: '12px', borderBottom: '1px solid var(--color-border-tertiary)' }}>
+                                          <th style={{ padding: '12px 10px' }} />
                                           <th style={{ padding: '12px 10px' }}>Item</th>
                                           <th style={{ padding: '12px 10px', width: '140px' }}>Manufacturer</th>
                                           <th style={{ padding: '12px 10px', width: '70px' }}>Qty</th>
@@ -916,6 +920,25 @@ export default function App() {
                                               borderBottom: '1px solid var(--color-border-tertiary)',
                                             }}
                                             >
+                                              <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>
+                                                <button 
+                                                  style={{
+                                                    ...SECONDARY_BUTTON,
+                                                    width: "72px",
+                                                    height: "50px"
+                                                  }}
+                                                  onClick={() => {
+                                                    if (!it["Image URL"]) return;
+                                                    const regex = /id=(.+)/;
+                                                    const result = it["Image URL"].match(regex);
+                                                    if (!result) return;
+                                                    const imageID = result[1];
+                                                    const url = `https://drive.google.com/file/d/${imageID}/preview`;
+                                                    setShowImagePopup({"show": true, "url": url});
+                                                  }}>
+                                                  View
+                                                </button>
+                                              </td>
                                               <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>
                                                 <div style={{ fontWeight: 600, fontSize: '14px' }}>{it[nk] || '—'}</div>
                                                 <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
@@ -976,6 +999,61 @@ export default function App() {
                 );
               })
             )}
+            {(showImagePopup["show"] && showImagePopup["url"]) && (
+              <div
+                  onClick={() => {setShowImagePopup({"show": false}); console.log(showImagePopup)}}
+                  style={{
+                      position: "fixed",
+                      top: 0,
+                      left: 0,
+                      width: "100vw",
+                      height: "100vh",
+                      backgroundColor: "rgba(0,0,0,0.75)",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      zIndex: 9999
+                  }}
+              >
+                  <div
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                          position: "relative",
+                          backgroundColor: "white",
+                          padding: "15px",
+                          borderRadius: "8px",
+                          maxWidth: "90vw",
+                          maxHeight: "90vh"
+                      }}
+                  >
+                      <button
+                          onClick={() => setShowImagePopup({"show": false})}
+                          style={{
+                            ...SECONDARY_BUTTON,
+                            position: "absolute",
+                            top: "10px",
+                            right: "10px",
+                            padding: "7px 10px",
+                            margin: 0,
+                            cursor: 'pointer'
+                          }}
+                      >
+                          ✕
+                      </button>
+                      
+                      <iframe
+                          src={showImagePopup["url"]}
+                          style={{
+                              maxWidth: "85vw",
+                              maxHeight: "85vh",
+                              width: "50vw",
+                              height: "80vh",
+                              display: "block"
+                          }}
+                      />
+                  </div>
+              </div>
+            )};
           </>
         )}
 
