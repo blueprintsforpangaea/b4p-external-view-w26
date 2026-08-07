@@ -434,7 +434,14 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [doneBanner, setDoneBanner] = useState(null);
-
+  // ── Unlisted / Out-of-Stock Supply Request state ──────────────────────────
+  const [unlistedType, setUnlistedType] = useState('Wound Care');
+  const [unlistedName, setUnlistedName] = useState('');
+  const [unlistedQty, setUnlistedQty] = useState(1);
+  const [unlistedBrand, setUnlistedBrand] = useState('');
+  const [unlistedNotes, setUnlistedNotes] = useState('');
+  const [unlistedSubmitting, setUnlistedSubmitting] = useState(false);
+  const [unlistedError, setUnlistedError] = useState(null);
   const parentOptions = useMemo(() => {
     const set = new Set(data.map(parentCategory));
     return ['All', ...[...set].sort((a, b) => a.localeCompare(b))];
@@ -597,6 +604,63 @@ export default function App() {
       setSubmitting(false);
     }
   }, [org, cart, clearCart, reloadOrgReq, reloadAvail]);
+
+  // ── Submit custom unlisted supply request ─────────────────────────────────
+  const handleCustomRequestSubmit = useCallback(async (e) => {
+    if (e) e.preventDefault();
+    const name = unlistedName.trim();
+    const qty = parseInt(unlistedQty, 10);
+    if (!name) {
+      setUnlistedError('Please provide a Product Name.');
+      return;
+    }
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setUnlistedError('Please enter a valid Quantity greater than 0.');
+      return;
+    }
+    setUnlistedSubmitting(true);
+    setUnlistedError(null);
+
+    const orgName = org?.org_name || 'Guest Clinic';
+    const orgEmail = org?.org_email || 'unlisted-request@clinic.org';
+    const productType = unlistedType.trim() || 'Other';
+    const brand = unlistedBrand.trim() || '';
+    const notes = unlistedNotes.trim() || '';
+    
+const brandManufacturer = unlistedBrand.trim() || null; 
+    try {
+      const res = await fetch(`${apiBase}/wishlist-requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clinic_name: orgName,
+          clinic_email: orgEmail,
+          product_type: productType,
+          product_name: name,
+          quantity_needed: qty,
+          brand_manufacturer: brand,
+          additional_details: notes
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        let errorMessage = 'Failed to submit request. Please try again.';
+        setUnlistedError(errorMessage);
+        return;
+      }
+      setDoneBanner(`Custom supply request submitted (ID: ${body.request_id || 'Submitted'})! Our team will review it.`);
+      setUnlistedName('');
+      setUnlistedQty(1);
+      setUnlistedBrand('');
+      setUnlistedNotes('');
+      setTab('my-requests');
+      if (org) reloadOrgReq();
+    } catch (err) {
+      setUnlistedError('Network error — please try again.');
+    } finally {
+      setUnlistedSubmitting(false);
+    }
+  }, [unlistedName, unlistedQty, unlistedBrand, unlistedNotes, unlistedType, org, reloadOrgReq]);
 
   // ── Group org requests by Request ID for My Requests tab ──────────────────
   const orgReqGroups = useMemo(() => {
@@ -781,6 +845,41 @@ export default function App() {
         {tab === 'browse' && (
           <>
             <section style={{ ...PANEL_STYLE, padding: '22px', marginBottom: '18px' }}>
+                            {/* Callout Banner for unlisted supply */}
+              <div style={{
+                marginBottom: '16px',
+                padding: '16px 20px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, #cbdbff 70%)',
+                border: '1px solid #cbdbff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '16px',
+                flexWrap: 'wrap'
+              }}>
+                <div>
+                  <strong style={{ color: '#000e3f', fontSize: '15px' }}>Can't find a product or supply?</strong>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#0035a2' }}>
+                    If a medical supply is out of stock or unavailable in our inventory, submit a custom request.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTab('request-unlisted')}
+                  style={{
+                    ...PRIMARY_BUTTON,
+                    background: 'rgb(55, 60, 130)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 18px',
+                    fontSize: '13px',
+                    boxShadow: '0 4px 12px rgba(55, 60, 130, 0.25)'
+                  }}
+                >
+                  Request unlisted supply →
+                </button>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', alignItems: 'end' }}>
                 <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   Search
@@ -1072,7 +1171,188 @@ export default function App() {
             )}
           </div>
         )}
+        {tab === 'request-unlisted' && (
+          <div style={{ ...PANEL_STYLE, padding: '32px', background: '#FFFCFA', border: '1px solid #F5E6D3' }}>
+            <div style={{
+              background: 'rgb(55, 60, 130)',
+              color: '#FFFFFF',
+              borderRadius: '20px',
+              padding: '24px 28px',
+              marginBottom: '28px',
+              boxShadow: '0 8px 24px rgba(55, 60, 130, 0.18)',
+            }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.9 }}>
+                Clinic Product Feedback & Custom Requests
+              </span>
+              <h2 style={{ margin: '6px 0 8px', fontSize: '28px', fontFamily: 'var(--font-display)', fontWeight: 700 }}>
+                Request an Out-of-Stock or Unavailable Supply
+              </h2>
+              <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.5, opacity: 0.95, maxWidth: '720px' }}>
+                Can't find what your clinic needs in our active warehouse inventory? Let our team know! We review all product requests and work with our network of donors and distributors to source needed medical supplies.
+              </p>
+            </div>
 
+            <form onSubmit={handleCustomRequestSubmit} style={{ display: 'grid', gap: '22px', maxWidth: '780px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#2C2C2C', marginBottom: '8px' }}>
+                  Product Type <span style={{ color: '#D9381E' }}>*</span>
+                </label>
+                <select
+                  value={unlistedType}
+                  onChange={e => setUnlistedType(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    fontSize: '15px',
+                    borderRadius: '14px',
+                    border: '1px solid #DDD',
+                    background: '#FFF',
+                  }}
+                >
+                  {['Wound Care', 'Gloves & PPE', 'Syringes & Needles', 'Diagnostics', 'Sterilization', 'Office Supplies', 'Medications', 'Other / General Medical'].map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#2C2C2C', marginBottom: '8px' }}>
+                  Product Name <span style={{ color: '#D9381E' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sterile Gauze Pads 4x4 or Nitrile Exam Gloves Large"
+                  value={unlistedName}
+                  onChange={e => setUnlistedName(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    fontSize: '15px',
+                    borderRadius: '14px',
+                    border: '1px solid #DDD',
+                    background: '#FFF',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#2C2C2C', marginBottom: '8px' }}>
+                    Quantity Needed <span style={{ color: '#D9381E' }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={unlistedQty}
+                    onChange={e => setUnlistedQty(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      fontSize: '15px',
+                      borderRadius: '14px',
+                      border: '1px solid #DDD',
+                      background: '#FFF',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#2C2C2C', marginBottom: '8px' }}>
+                    Brand / Manufacturer Name <span style={{ fontSize: '12px', fontWeight: 400, color: '#666' }}>(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 3M, BD, Medline, McKesson"
+                    value={unlistedBrand}
+                    onChange={e => setUnlistedBrand(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      fontSize: '15px',
+                      borderRadius: '14px',
+                      border: '1px solid #DDD',
+                      background: '#FFF',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#2C2C2C', marginBottom: '8px' }}>
+                  Additional Details or Specifications <span style={{ fontSize: '12px', fontWeight: 400, color: '#666' }}>(Optional)</span>
+                </label>
+                <textarea
+                  rows="3"
+                  placeholder="Include size, latex-free preference, clinical urgency, or alternate product codes..."
+                  value={unlistedNotes}
+                  onChange={e => setUnlistedNotes(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    fontSize: '14px',
+                    borderRadius: '14px',
+                    border: '1px solid #DDD',
+                    background: '#FFF',
+                    resize: 'vertical',
+                  }}
+                />
+              </div>
+
+              <div style={{
+                padding: '14px 18px',
+                borderRadius: '14px',
+                background: 'rgba(248, 250, 252, 0.9)',
+                border: '1px solid var(--color-border-secondary)',
+                fontSize: '13px',
+                color: 'var(--color-text-secondary)',
+              }}>
+                {org ? (
+                  <span>Submitting on behalf of clinic: <strong>{org.org_name}</strong> ({org.org_email})</span>
+                ) : (
+                  <span>You are currently not signed in. You can still submit, or <button type="button" onClick={() => setLoginOpen(true)} style={{ background: 'none', border: 'none', color: '#0A84FF', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline' }}>sign in here</button> to link requests to your account.</span>
+                )}
+              </div>
+
+              {unlistedError && (
+                <p style={{ color: '#D9381E', fontSize: '14px', margin: 0, fontWeight: 600 }}>{unlistedError}</p>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginTop: '6px' }}>
+                <button
+                  type="submit"
+                  disabled={unlistedSubmitting}
+                  style={{
+                    ...PRIMARY_BUTTON,
+                    background: 'rgb(55, 60, 130)',
+                    padding: '12px 28px',
+                    fontSize: '15px',
+                    boxShadow: '0 6px 18px rgba(55, 60, 130, 0.28)',
+                    opacity: unlistedSubmitting ? 0.6 : 1,
+                    cursor: unlistedSubmitting ? 'default' : 'pointer',
+                  }}
+                >
+                  {unlistedSubmitting ? 'Submitting Request...' : 'Submit Request'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUnlistedName('');
+                    setUnlistedQty(1);
+                    setUnlistedBrand('');
+                    setUnlistedNotes('');
+                    setUnlistedError(null);
+                  }}
+                  style={{ ...SECONDARY_BUTTON, padding: '12px 20px', fontSize: '14px' }}
+                >
+                  Reset Form
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
         {cartOpen && (
           <aside style={{
             position: 'fixed',
