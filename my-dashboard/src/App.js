@@ -362,11 +362,8 @@ function useInventory() {
       });
   }, []);
   
-  useEffect(() => { 
+    useEffect(() => { 
     reload(); 
-    // Live update inventory in the background every 10 seconds
-    const interval = setInterval(() => reload(true), 10000);
-    return () => clearInterval(interval);
   }, [reload]);
   
   return { data, loading, error, reload };
