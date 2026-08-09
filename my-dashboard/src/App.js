@@ -1096,7 +1096,6 @@ export default function App() {
                         <th style={{ padding: '12px 8px' }}>Item</th>
                         <th style={{ padding: '12px 8px' }}>Category</th>
                         <th style={{ padding: '12px 8px', width: '100px' }}>Qty</th>
-                        <th style={{ padding: '12px 8px', width: '150px' }}>Availability</th>
                         <th style={{ padding: '12px 8px', width: '100px' }}></th>
                       </tr>
                     </thead>
@@ -1112,7 +1111,6 @@ export default function App() {
                             <td style={{ padding: '16px 8px' }}>
                               <input type="number" min={1} value={line.quantity} onChange={e => setLineQty(Number(row), e.target.value)} style={{ width: '64px', padding: '6px 8px', borderRadius: '12px', border: '1px solid var(--color-border-secondary)', background: 'white' }} />
                             </td>
-                            <td style={{ padding: '16px 8px' }}>{avail && <AvailBadge availInfo={avail} />}</td>
                             <td style={{ padding: '16px 8px', textAlign: 'right' }}>
                               <button type="button" onClick={() => setLineQty(Number(row), 0)} style={{ fontSize: '13px', background: 'none', border: 'none', color: '#A93226', cursor: 'pointer', fontWeight: 700 }}>Remove</button>
                             </td>
