@@ -342,8 +342,10 @@ function useInventory() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const reload = useCallback(() => {
-    setLoading(true);
+  
+  // Added "silent" parameter so the loading spinner doesn't flash every 10 seconds
+  const reload = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     fetch(`${apiBase}/api/supplies`)
       .then(r => {
@@ -355,11 +357,15 @@ function useInventory() {
         setLoading(false);
       })
       .catch(() => {
-        setError('Could not load inventory. Is the API running on port 8000?');
+        if (!silent) setError('Could not load inventory. Is the API running on port 8000?');
         setLoading(false);
       });
   }, []);
-  useEffect(() => { reload(); }, [reload]);
+  
+    useEffect(() => { 
+    reload(); 
+  }, [reload]);
+  
   return { data, loading, error, reload };
 }
 

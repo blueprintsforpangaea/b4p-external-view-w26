@@ -215,7 +215,71 @@ async def health():
 
 @app.get("/api/supplies")
 async def supplies():
-    return get_inventory_records()
+    inventory = get_inventory_records()
+
+    # 1. Fetch all existing requests
+    org_requests = []
+    if _use_sample_data():
+        org_requests = list(_sample_org_request_rows)
+    else:
+        try:
+            spreadsheet = _open_requests_spreadsheet()
+            ws = _org_requests_worksheet(spreadsheet)
+            all_rows = ws.get_all_values()
+            if len(all_rows) > 1:
+                header = all_rows[0]
+                for r in all_rows[1:]:
+                    if any(cell.strip() for cell in r):
+                        org_requests.append({header[j]: (r[j] if j < len(r) else "") for j in range(len(header))})
+        except Exception:
+            pass
+
+    # 2. Sum up pending quantities per item
+    pending_quantities = {}
+    for req in org_requests:
+        status = req.get("Status", "").strip()
+        # Deduct quantities for requests that have not yet been shipped
+        if status in ["Under Review", "Pending", "Approved"]:
+            item_name = req.get("Item Name", "").strip().lower()
+            try:
+                qty = int(str(req.get("Quantity Requested", "0")).replace(",", ""))
+                pending_quantities[item_name] = pending_quantities.get(item_name, 0) + qty
+            except ValueError:
+                pass
+
+    # 3. Deduct from available inventory
+    for rec in inventory:
+        item_name = (rec.get("Name") or rec.get("name") or "").strip().lower()
+        if item_name in pending_quantities:
+            # Support either "Quantity" or "quantity" as the column name
+            qty_key = "Quantity" if "Quantity" in rec else "quantity" if "quantity" in rec else None
+            if qty_key:
+                try:
+                    current_qty = int(str(rec[qty_key]).replace(",", ""))
+                    # Calculate new amount (preventing it from dropping below 0)
+                    new_qty = max(0, current_qty - pending_quantities[item_name])
+                    rec[qty_key] = str(new_qty)
+                except ValueError:
+                    pass
+
+    # 4. Filter out items with 0 stock
+    available_inventory = []
+    for rec in inventory:
+        qty_key = "Quantity" if "Quantity" in rec else "quantity" if "quantity" in rec else None
+        
+        if qty_key:
+            try:
+                # Check if the remaining quantity is greater than 0
+                qty = int(str(rec[qty_key]).replace(",", ""))
+                if qty > 0:
+                    available_inventory.append(rec)
+            except ValueError:
+                # If quantity is "N/A" or text, keep it in the list just in case
+                available_inventory.append(rec)
+        else:
+            available_inventory.append(rec)
+
+    return available_inventory
 
 
 @app.get("/api/requests")
@@ -357,7 +421,8 @@ def _inventory_primary_key(record: dict) -> str:
 
 
 @app.post("/requests")
-def submit_org_request(body: OrgRequestBody):
+async def submit_org_request(body: OrgRequestBody):
+    # 1. Handle sample data mode
     if _use_sample_data():
         request_id = _make_request_id()
         ts = datetime.now(timezone.utc).isoformat()
@@ -370,13 +435,56 @@ def submit_org_request(body: OrgRequestBody):
             })
         return {"request_id": request_id, "status": "Under Review", "message": "USE_SAMPLE_DATA mode."}
 
+    # 2. Fetch inventory and open the requests sheet EXACTLY ONCE
+    inventory = get_inventory_records()
+    spreadsheet = _open_requests_spreadsheet()
+    ws = _org_requests_worksheet(spreadsheet)
+    all_rows = ws.get_all_values()
+    
+    org_requests = []
+    if len(all_rows) > 1:
+        header = all_rows[0]
+        for r in all_rows[1:]:
+            if any(cell.strip() for cell in r):
+                org_requests.append({header[j]: (r[j] if j < len(r) else "") for j in range(len(header))})
+
+    # 3. Calculate pending quantities internally (so we don't need to call supplies() again)
+    pending_quantities = {}
+    for req in org_requests:
+        status = req.get("Status", "").strip()
+        if status in ["Under Review", "Pending", "Approved"]:
+            item_name = req.get("Item Name", "").strip().lower()
+            try:
+                qty = int(str(req.get("Quantity Requested", "0")).replace(",", ""))
+                pending_quantities[item_name] = pending_quantities.get(item_name, 0) + qty
+            except ValueError:
+                pass
+
+    # 4. Check if they are trying to order more than what is available
+    for item in body.items:
+        found_item = next((rec for rec in inventory if (rec.get("Name") or rec.get("name") or "").strip().lower() == item.item_name.strip().lower()), None)
+        
+        if not found_item:
+            raise HTTPException(status_code=400, detail=f"'{item.item_name}' is no longer available.")
+            
+        qty_key = "Quantity" if "Quantity" in found_item else "quantity" if "quantity" in found_item else None
+        if qty_key:
+            try:
+                raw_qty = int(str(found_item[qty_key]).replace(",", ""))
+                pending_qty = pending_quantities.get(item.item_name.strip().lower(), 0)
+                available_qty = max(0, raw_qty - pending_qty)
+                
+                if item.quantity > available_qty:
+                    if available_qty == 0:
+                        raise HTTPException(status_code=400, detail=f"'{item.item_name}' is out of stock. Please remove it from your cart to proceed with checkout.")
+                    else:
+                        raise HTTPException(status_code=400, detail=f"The quantity you want for '{item.item_name}' is no longer available (only {available_qty} left). Please adjust the quantity or remove it from your cart to proceed.")
+            except ValueError:
+                pass
+
+    # 5. Since we already have the sheet open (ws), just write the rows!
     request_id = _make_request_id()
     ts = datetime.now(timezone.utc).isoformat()
-
-    items_payload = [
-        {"item_name": item.item_name, "category": item.category, "quantity": item.quantity, "inventory_key": ""}
-        for item in body.items
-    ]
 
     batch: list[list] = [
         [request_id, body.org_name, body.org_email, item.item_name,
@@ -384,15 +492,12 @@ def submit_org_request(body: OrgRequestBody):
         for item in body.items
     ]
 
-    spreadsheet = _open_requests_spreadsheet()
-    ws = _org_requests_worksheet(spreadsheet)
     try:
         ws.append_rows(batch, value_input_option="USER_ENTERED")
     except gspread.exceptions.APIError as exc:
         raise HTTPException(status_code=502, detail=f"Google Sheets error: {exc}") from exc
 
     return {"request_id": request_id, "status": "Under Review"}
-
 
 @app.patch("/requests/{request_id}/status")
 async def update_org_request_status(request_id: str, body: StatusUpdateBody):
