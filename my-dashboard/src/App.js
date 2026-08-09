@@ -313,16 +313,19 @@ function MetricCard({ label, value, accent }) {
   );
 }
 
-function BrandLogo() {
+function BrandLogo({ onClick }) {
   return (
-    <div style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '8px 10px',
-      borderRadius: '18px',
-      background: 'rgba(255, 255, 255, 0.92)',
-    }}>
+    <div 
+      onClick={onClick}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '8px 10px',
+        borderRadius: '18px',
+        background: 'rgba(255, 255, 255, 0.92)',
+        cursor: 'pointer',
+      }}>
       <img
         src={bloopsLogo}
         alt="Blueprints for Pangaea"
@@ -434,7 +437,7 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [doneBanner, setDoneBanner] = useState(null);
-
+  const [toast, setToast] = useState(null);
   const parentOptions = useMemo(() => {
     const set = new Set(data.map(parentCategory));
     return ['All', ...[...set].sort((a, b) => a.localeCompare(b))];
@@ -524,9 +527,14 @@ export default function App() {
   }, [availMap]);
 
   // Require login before cart actions
-  const handleAddToCart = useCallback((item, qtyDelta = 1) => {
+    const handleAddToCart = useCallback((item, qtyDelta = 1) => {
     if (!org) { setLoginOpen(true); return; }
     addToCart(item, qtyDelta);
+    if (qtyDelta > 0) {
+      const nk = pickNameField(item);
+      setToast({ name: item[nk] });
+      setTimeout(() => setToast(null), 3000); // Hides the pop-up after 3 seconds
+    }
   }, [org, addToCart]);
 
   const setLineQty = useCallback((row, qty) => {
@@ -669,8 +677,7 @@ export default function App() {
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
-              <BrandLogo />
-              {org ? (
+              <BrandLogo onClick={() => setTab('browse')} />              {org ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', flexWrap: 'wrap' }}>
                   <span style={{ color: 'var(--color-text-secondary)' }}>
                     Signed in as <strong>{org.org_name}</strong>
@@ -696,7 +703,7 @@ export default function App() {
               <TabButton active={tab === 'browse'} onClick={() => setTab('browse')}>
                 Browse & request
               </TabButton>
-              <TabButton active={tab === 'my-requests'} onClick={() => {
+                            <TabButton active={tab === 'my-requests'} onClick={() => {
                 if (!org) { setLoginOpen(true); return; }
                 setTab('my-requests');
                 reloadOrgReq();
@@ -708,18 +715,18 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   if (!org) { setLoginOpen(true); return; }
-                  setCartOpen(v => !v);
+                  setTab('cart');
                 }}
-                style={{ ...PRIMARY_BUTTON, position: 'relative' }}
+                style={{ ...PRIMARY_BUTTON, position: 'relative', background: tab === 'cart' ? 'linear-gradient(180deg, var(--accent-blue-dark), var(--accent-blue))' : PRIMARY_BUTTON.background }}
               >
-                Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+                               Cart
                 {cartCount > 0 && (
                   <span style={{
                     position: 'absolute', top: '-10px', right: '-6px',
-                    background: 'var(--bauhaus-red)', color: 'white', fontSize: '11px',
+                    background: 'white', color: '#0035a2', fontSize: '11px',
                     minWidth: '22px', height: '22px', borderRadius: '999px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '2px solid var(--color-border-secondary)',
+                    border: '2px solid #0035a2',
                   }}
                   >
                     {cartCount > 99 ? '99+' : cartCount}
@@ -932,7 +939,7 @@ export default function App() {
                                               <td style={{ padding: '14px 10px', verticalAlign: 'top' }}>
                                                 <AvailBadge availInfo={avail} />
                                               </td>
-                                              <td style={{ padding: '14px 10px', verticalAlign: 'top', fontWeight: 600, color: isRequested ? '#7A6A00' : 'var(--color-text-secondary)' }}>
+                                              <td style={{ padding: '14px 10px', verticalAlign: 'top', fontWeight: 600, color: isRequested ? '#16007a' : 'var(--color-text-secondary)' }}>
                                                 {isRequested && avail.requesting_org ? `Requested by: ${avail.requesting_org}` : '—'}
                                               </td>
                                               <td style={{ padding: '14px 10px', verticalAlign: 'top', textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -1073,68 +1080,54 @@ export default function App() {
           </div>
         )}
 
-        {cartOpen && (
-          <aside style={{
-            position: 'fixed',
-            right: 16,
-            top: 24,
-            width: 380,
-            maxWidth: 'calc(100vw - 32px)',
-            maxHeight: 'calc(100vh - 48px)',
-            overflow: 'auto',
-            ...PANEL_STYLE,
-            borderRadius: '24px',
-            padding: '18px',
-            zIndex: 20,
-            background: 'rgba(255,255,255,0.96)',
-            backdropFilter: 'blur(18px)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-              <h2 style={{ margin: 0, fontSize: '20px', flex: 1, fontFamily: 'var(--font-display)', fontWeight: 700 }}>Cart</h2>
-              <button type="button" onClick={() => setCartOpen(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '24px' }}>×</button>
+                {tab === 'cart' && (
+          <div style={{ ...PANEL_STYLE, padding: '22px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '24px', flex: 1, fontFamily: 'var(--font-display)', fontWeight: 700 }}>Your Cart</h2>
             </div>
             {cartCount === 0 ? (
               <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>Nothing here yet — add from Browse.</p>
             ) : (
               <>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px' }}>
-                  {Object.entries(cart).map(([row, line]) => {
-                    const nk = pickNameField(line.item);
-                    const avail = availMap[Number(row)];
-                    const cat = parentCategory(line.item);
-                    return (
-                      <li key={row} style={{
-                        padding: '14px',
-                        border: '1px solid var(--color-border-secondary)',
-                        borderRadius: '16px',
-                        marginBottom: '10px',
-                        background: 'rgba(248,250,252,0.82)',
-                        fontSize: '13px',
-                      }}>
-                        <div style={{ fontWeight: 600, marginBottom: '2px' }}>{line.item[nk]}</div>
-                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
-                          {cat}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                            Qty
-                            <input type="number" min={1} value={line.quantity} onChange={e => setLineQty(Number(row), e.target.value)} style={{ width: '64px', marginLeft: '6px', padding: '6px 8px', borderRadius: '12px', border: '1px solid var(--color-border-secondary)', background: 'white' }} />
-                          </label>
-                          {avail && <AvailBadge availInfo={avail} />}
-                          <button type="button" onClick={() => setLineQty(Number(row), 0)} style={{ marginLeft: 'auto', fontSize: '12px', background: 'none', border: 'none', color: '#A93226', cursor: 'pointer', fontWeight: 700 }}>
-                            Remove
-                          </button>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <button type="button" onClick={() => { setCheckoutOpen(true); setSubmitError(null); }} style={{ ...PRIMARY_BUTTON, width: '100%', justifyContent: 'center' }}>
-                  Checkout
-                </button>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', marginBottom: '20px', minWidth: '700px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--color-border-tertiary)', textAlign: 'left', color: 'var(--color-text-secondary)' }}>
+                        <th style={{ padding: '12px 8px' }}>Item</th>
+                        <th style={{ padding: '12px 8px' }}>Category</th>
+                        <th style={{ padding: '12px 8px', width: '100px' }}>Qty</th>
+                        <th style={{ padding: '12px 8px', width: '100px' }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(cart).map(([row, line]) => {
+                        const nk = pickNameField(line.item);
+                        const avail = availMap[Number(row)];
+                        const cat = parentCategory(line.item);
+                        return (
+                          <tr key={row} style={{ borderBottom: '1px solid var(--color-border-tertiary)' }}>
+                            <td style={{ padding: '16px 8px', fontWeight: 600 }}>{line.item[nk]}</td>
+                            <td style={{ padding: '16px 8px', color: 'var(--color-text-secondary)' }}>{cat}</td>
+                            <td style={{ padding: '16px 8px' }}>
+                              <input type="number" min={1} value={line.quantity} onChange={e => setLineQty(Number(row), e.target.value)} style={{ width: '64px', padding: '6px 8px', borderRadius: '12px', border: '1px solid var(--color-border-secondary)', background: 'white' }} />
+                            </td>
+                            <td style={{ padding: '16px 8px', textAlign: 'right' }}>
+                              <button type="button" onClick={() => setLineQty(Number(row), 0)} style={{ fontSize: '13px', background: 'none', border: 'none', color: '#A93226', cursor: 'pointer', fontWeight: 700 }}>Remove</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button type="button" onClick={() => { setCheckoutOpen(true); setSubmitError(null); }} style={{ ...PRIMARY_BUTTON, padding: '12px 24px', fontSize: '16px' }}>
+                    Proceed to Checkout
+                  </button>
+                </div>
               </>
             )}
-          </aside>
+          </div>
         )}
 
         {checkoutOpen && (
@@ -1220,6 +1213,24 @@ export default function App() {
           </div>
         )}
       </div>
+              {toast && (
+          <div style={{
+            position: 'fixed', right: '24px', top: '24px', zIndex: 9999,
+            background: 'rgba(255, 255, 255, 0.98)', border: '1px solid var(--color-border-secondary)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.15)', borderRadius: '16px', padding: '16px 20px',
+            display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '260px', maxWidth: '300px',
+            animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)', backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-primary)' }}>Added to Cart</span>
+              <button onClick={() => setToast(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: 0 }}>×</button>
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+              {toast.name}
+            </div>
+            <style>{`@keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
+          </div>
+        )}
     </div>
   );
 }
