@@ -1,4 +1,4 @@
-import { API_BASE, ApiError, apiRequest, getAvailability, getMyRequests, getSupplies, submitRequest } from './api';
+import { API_BASE, ApiError, apiRequest, getAllRequests, getAvailability, getMyRequests, getSupplies, setRequestStatus, submitRequest } from './api';
 import { parseHash } from './hooks';
 
 const json = (status, body) => Promise.resolve({
@@ -41,6 +41,25 @@ describe('apiRequest', () => {
     expect(init.method).toBe('POST');
     expect(init.headers['Content-Type']).toBe('application/json');
     expect(JSON.parse(init.body)).toEqual(payload);
+  });
+
+  test('HQ calls send the token header; plain GETs send no headers', async () => {
+    fetch.mockReturnValue(json(200, []));
+    await getAllRequests('t0k');
+    expect(fetch.mock.calls[0][0]).toBe(`${API_BASE}/requests`);
+    expect(fetch.mock.calls[0][1].headers).toEqual({ 'X-HQ-Token': 't0k' });
+    expect(fetch.mock.calls[0][1].cache).toBe('no-store');
+
+    fetch.mockReturnValue(json(200, { request_id: 'REQ-1/x', status: 'Approved' }));
+    await setRequestStatus('REQ-1/x', 'Approved', 't0k');
+    const [url, init] = fetch.mock.calls[1];
+    expect(url).toBe(`${API_BASE}/requests/REQ-1%2Fx/status`);
+    expect(init.method).toBe('PATCH');
+    expect(init.headers).toEqual({ 'Content-Type': 'application/json', 'X-HQ-Token': 't0k' });
+    expect(JSON.parse(init.body)).toEqual({ status: 'Approved' });
+
+    await getSupplies();
+    expect(fetch.mock.calls[2][1].headers).toBeUndefined();
   });
 
   test('email is URL-encoded in My requests', async () => {
@@ -166,6 +185,7 @@ describe('parseHash', () => {
     ['#/sent/', { view: 'catalog' }],
     ['#/nope', { view: 'catalog' }],
     ['#requests', { view: 'requests' }],
+    ['#/hq', { view: 'hq' }],
   ])('%s', (hash, route) => {
     expect(parseHash(hash)).toEqual(route);
   });

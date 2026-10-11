@@ -27,7 +27,7 @@ export function useMediaQuery(query) {
   return matches;
 }
 
-// Routes: #/  #/c/<category>[/<type>]  #/requests  #/item/<row>  #/slip  #/review  #/sent/<id>
+// Routes: #/  #/c/<category>[/<type>]  #/requests  #/item/<row>  #/slip  #/review  #/sent/<id>  #/hq (HQ only, not linked)
 // Only real request IDs render on the "submitted" page (no spoofed text via links).
 const REQUEST_ID_RE = /^REQ-\d+-[0-9a-z]+$/i;
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
@@ -35,6 +35,7 @@ export function parseHash(hash) {
   const path = String(hash || '').replace(/^#/, '').replace(/^\/+/, '');
   const [view, param, extra] = path.split('/');
   if (view === 'requests') return { view: 'requests' };
+  if (view === 'hq') return { view: 'hq' };
   if (view === 'review' || view === 'checkout') return { view: 'checkout' };
   if (view === 'slip') return { view: 'slip' };
   if (view === 'sent' && REQUEST_ID_RE.test(param || '')) return { view: 'sent', id: param };

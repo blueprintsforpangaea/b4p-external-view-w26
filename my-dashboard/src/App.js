@@ -10,6 +10,7 @@ import Header from './components/Header';
 import Icon from './components/Icons';
 import ItemDetail from './components/ItemDetail';
 import Landing from './components/Landing';
+import HQReview from './components/HQReview';
 import MyRequests from './components/MyRequests';
 import RequestSlip from './components/RequestSlip';
 import SearchResults from './components/SearchResults';
@@ -297,7 +298,10 @@ export default function App() {
   const tableProps = useMemo(() => ({ quantities, onQuantity, onOpenItem: openItem }), [quantities, onQuantity, openItem]);
 
   let main;
-  if (base.view === 'requests') {
+  if (base.view === 'hq') {
+    // Approvals hold stock, so refresh the holds the catalog shows after each change.
+    main = <HQReview onStatusChanged={reloadHolds} />;
+  } else if (base.view === 'requests') {
     main = (
       <MyRequests
         org={org}
@@ -510,6 +514,7 @@ export default function App() {
 function routePath(r) {
   if (r.view === 'category') return `/c/${r.slug}${r.type ? `/${r.type}` : ''}`;
   if (r.view === 'requests') return '/requests';
+  if (r.view === 'hq') return '/hq';
   if (r.view === 'checkout') return '/review';
   if (r.view === 'sent') return `/sent/${r.id}`;
   return '/';

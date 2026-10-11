@@ -55,7 +55,7 @@ function messageFor(status, body) {
 
 // `cache: 'no-cache'` makes the browser revalidate (ETag -> usually a tiny 304)
 // instead of serving its up-to-60s-old copy; use it after user actions.
-export async function apiRequest(path, { method = 'GET', body, timeout = DEFAULT_TIMEOUT, onSlow, cache } = {}) {
+export async function apiRequest(path, { method = 'GET', body, headers, timeout = DEFAULT_TIMEOUT, onSlow, cache } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   const slowTimer = onSlow ? setTimeout(onSlow, SLOW_AFTER) : null;
@@ -63,7 +63,7 @@ export async function apiRequest(path, { method = 'GET', body, timeout = DEFAULT
   try {
     res = await fetch(`${API_BASE}${path}`, {
       method,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      headers: body || headers ? { ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers } : undefined,
       body: body ? JSON.stringify(body) : undefined,
       signal: controller.signal,
       ...(cache ? { cache } : {}),
@@ -90,3 +90,10 @@ export const getSupplies = (opts) => apiRequest('/api/supplies', opts);
 export const getAvailability = (opts) => apiRequest('/inventory/availability', opts);
 export const getMyRequests = (email, opts) => apiRequest(`/requests?email=${encodeURIComponent(email)}`, opts);
 export const submitRequest = (payload, opts) => apiRequest('/requests', { ...opts, method: 'POST', body: payload });
+
+// HQ only: the shared HQ_API_TOKEN goes in X-HQ-Token (see require_hq in main.py).
+const hqHeaders = (token) => ({ 'X-HQ-Token': token });
+export const getAllRequests = (token, opts) =>
+  apiRequest('/requests', { ...opts, headers: hqHeaders(token), cache: 'no-store' });
+export const setRequestStatus = (id, status, token) =>
+  apiRequest(`/requests/${encodeURIComponent(id)}/status`, { method: 'PATCH', body: { status }, headers: hqHeaders(token) });

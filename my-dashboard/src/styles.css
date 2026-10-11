@@ -2364,3 +2364,62 @@ button:disabled {
     grid-row: span 2;
   }
 }
+
+/* HQ review (#/hq) */
+.hq__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hq__tools {
+  display: flex;
+  gap: 8px;
+}
+.hq__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.chip:hover {
+  border-color: var(--blue);
+}
+.chip--on {
+  background: var(--blue-50);
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: var(--w-strong);
+}
+.hq__org {
+  margin: 4px 0;
+}
+.hq__status {
+  margin: 4px 0 8px;
+  font-weight: var(--w-strong);
+  color: var(--ink-2);
+}
+.hq__status--stopped {
+  color: var(--danger-text);
+}
+.hq__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
