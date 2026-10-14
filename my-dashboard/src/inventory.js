@@ -244,7 +244,7 @@ export function badgesFor(item, onHold) {
     out.push({ kind: 'low', label: 'Low stock' });
   }
   if (item.expiryState === 'soon') out.push({ kind: 'soon', label: 'Expires soon' });
-  if (item.needsReview) out.push({ kind: 'info', label: 'Needs HQ check' });
+  if (item.needsReview) out.push({ kind: 'info', label: 'Team check' });
   return out;
 }
 
@@ -539,10 +539,10 @@ export function allocateFefo(product, quantity) {
   return out;
 }
 
-// "3 supplies" or "3 supplies (5 lots)": same wording on the confirmation and in My requests.
+// "3 supplies" or "3 supplies (5 batches)": same wording on the confirmation and in My requests.
 export function suppliesLabel(supplies, lots) {
   const base = `${supplies} ${supplies === 1 ? 'supply' : 'supplies'}`;
-  return lots > supplies ? `${base} (${lots} lots)` : base;
+  return lots > supplies ? `${base} (${lots} batches)` : base;
 }
 
 export function formatMonth(isoDate) {

@@ -27,7 +27,7 @@ export default class ErrorBoundary extends Component {
       <main className="main">
         <div className="state state--error" role="alert">
           <h1 className="page-title">Something went wrong on this page</h1>
-          <p className="state__text">Your request slip is saved on this device. Reload to keep going.</p>
+          <p className="state__text">Your list is saved on this device. Reload to keep going.</p>
           <a
             className="btn btn--primary"
             href="#/"

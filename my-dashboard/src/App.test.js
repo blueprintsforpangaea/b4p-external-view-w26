@@ -82,7 +82,7 @@ function go(hash) {
 const at = (hash) => window.history.replaceState(null, '', `/${hash}`);
 const rowFor = (name) => screen.getByRole('button', { name: new RegExp(`^${name}$`) }).closest('tr');
 const addButton = (name) => screen.getByRole('button', { name: new RegExp(`^Add ${name} to request$`, 'i') });
-const headerRequest = () => within(screen.getByRole('banner')).getByRole('button', { name: /request/i });
+const headerRequest = () => within(screen.getByRole('banner')).getByRole('button', { name: /your list/i });
 
 // Waits for a row button by name, or (default) for the page's h1.
 async function renderAt(hash, waitFor = 'h1') {
@@ -111,14 +111,14 @@ afterEach(() => {
 });
 
 describe('landing', () => {
-  test('lists every category with counts and type links, and no photos', async () => {
+  test('lists every category with how many kinds, type links, and no photos', async () => {
     at('#/');
     const { container } = render(<App />);
     expect(await screen.findByRole('heading', { level: 1, name: 'Supplies for partner clinics' })).toBeInTheDocument();
     const landing = document.querySelector('.landing');
     const syringes = within(landing).getByRole('link', { name: /Needles & Syringes/ });
     expect(syringes).toHaveAttribute('href', '#/c/needles-and-syringes');
-    expect(syringes.closest('h2')).toHaveTextContent('2');
+    expect(syringes.closest('h2')).toHaveTextContent(/Needles & Syringes\s*\d+ kinds? of supplies/);
     expect(within(landing).getByRole('link', { name: /Other supplies/ })).toBeInTheDocument();
     expect(container.querySelectorAll('a[href^="#/c/needles-and-syringes/"]').length).toBeGreaterThan(0);
     expect(document.querySelectorAll('img')).toHaveLength(0);
@@ -126,7 +126,7 @@ describe('landing', () => {
 
   test('unlabelled rows are hidden (no footnote any more)', async () => {
     await renderAt('#/');
-    fireEvent.change(screen.getByLabelText('Search supplies'), { target: { value: 'cardinal' } });
+    fireEvent.change(screen.getByLabelText('What do you need?'), { target: { value: 'cardinal' } });
     await screen.findByRole('heading', { level: 1, name: /Results for/ });
     expect(screen.queryByText('Unnamed supply')).not.toBeInTheDocument();
     expect(document.querySelectorAll('tr.item-row[data-row="8"]')).toHaveLength(0);
@@ -194,7 +194,7 @@ describe('category page', () => {
 describe('search', () => {
   test('instant search shows matching rows; unlabelled rows never appear', async () => {
     await renderAt('#/');
-    fireEvent.change(screen.getByLabelText('Search supplies'), { target: { value: 'syringe' } });
+    fireEvent.change(screen.getByLabelText('What do you need?'), { target: { value: 'syringe' } });
     expect(await screen.findByRole('heading', { level: 1, name: 'Results for “syringe”' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Synthetic 10ml Syringe$/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Gauze pads 4x4$/ })).not.toBeInTheDocument();
@@ -204,7 +204,7 @@ describe('search', () => {
   test('a supply matching only through its category is listed after a heading, not dropped', async () => {
     handlers.supplies = () => response(200, [...SUPPLIES, supply(9, { Name: 'Alcohol prep pads', General: 'alcohol prep', Subcategory: 'Needles & Syringes', Quantity: '9' })]);
     await renderAt('#/');
-    fireEvent.change(screen.getByLabelText('Search supplies'), { target: { value: 'syringe' } });
+    fireEvent.change(screen.getByLabelText('What do you need?'), { target: { value: 'syringe' } });
     expect(await screen.findByRole('heading', { level: 2, name: 'Also in matching categories' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Alcohol prep pads$/ })).toBeInTheDocument();
     const heading = screen.getByRole('heading', { level: 2, name: 'Also in matching categories' });
@@ -214,27 +214,49 @@ describe('search', () => {
 
   test('no results offers Clear search, which returns to the catalog', async () => {
     await renderAt('#/');
-    fireEvent.change(screen.getByLabelText('Search supplies'), { target: { value: 'zzzz' } });
+    fireEvent.change(screen.getByLabelText('What do you need?'), { target: { value: 'zzzz' } });
     expect(await screen.findByText('No supplies match “zzzz”')).toBeInTheDocument();
     userEvent.click(within(screen.getByRole('main')).getByRole('button', { name: 'Clear search' }));
-    expect(screen.getByLabelText('Search supplies')).toHaveValue('');
+    expect(screen.getByLabelText('What do you need?')).toHaveValue('');
     expect(await screen.findByRole('heading', { level: 1, name: 'Supplies for partner clinics' })).toBeInTheDocument();
   });
 
-  test('placeholder counts only listed supplies', async () => {
+  test('the total counts only listed supplies', async () => {
     await renderAt('#/');
-    expect(screen.getByLabelText('Search supplies')).toHaveAttribute('placeholder', 'Search 5 supplies'); // not the expired or unlabelled rows
+    const tree = screen.getByRole('navigation', { name: 'Categories' });
+    expect(within(tree).getByRole('link', { name: /All categories/ })).toHaveTextContent(/All categories\s*5$/); // not the expired or unlabelled rows
   });
 
-  test('typing on My requests goes back to the catalog with results', async () => {
+  test('the search box is only on the supply pages', async () => {
     await renderAt('#/requests', null);
-    fireEvent.change(await screen.findByLabelText('Search supplies'), { target: { value: 'gloves' } });
-    expect(await screen.findByRole('button', { name: /^Nitrile gloves$/ })).toBeInTheDocument();
-    expect(window.location.hash).toMatch(/^#\/?$/);
+    await screen.findByRole('heading', { level: 1, name: 'My requests' });
+    expect(screen.queryByLabelText('What do you need?')).not.toBeInTheDocument();
+    expect(within(screen.getByRole('banner')).queryByRole('searchbox')).not.toBeInTheDocument();
   });
 });
 
 describe('request drawer', () => {
+  test('the header says the list is empty, then shows the count', async () => {
+    await renderAt('#/c/gloves', /^Nitrile gloves$/);
+    expect(headerRequest()).toHaveTextContent(/^Your list is empty$/);
+    userEvent.click(addButton('Nitrile gloves'));
+    expect(headerRequest()).toHaveTextContent('Your list (1)');
+  });
+
+  test('Add to list shows "Added" over the stepper briefly', async () => {
+    await renderAt('#/c/gloves', /^Nitrile gloves$/);
+    jest.useFakeTimers();
+    try {
+      userEvent.click(addButton('Nitrile gloves'));
+      const row = rowFor('Nitrile gloves');
+      expect(within(row).getByText('Added')).toBeInTheDocument();
+      act(() => { jest.advanceTimersByTime(3000); });
+      expect(within(row).queryByText('Added')).not.toBeInTheDocument();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test('Add becomes a stepper capped at stock; header shows the count', async () => {
     await renderAt('#/c/wound-care-and-bandages', /^Gauze pads 4x4$/);
     userEvent.click(addButton('Gauze pads 4x4'));
@@ -242,15 +264,15 @@ describe('request drawer', () => {
     userEvent.click(within(row).getByRole('button', { name: 'One more Gauze pads 4x4' }));
     expect(within(row).getByLabelText('Quantity of Gauze pads 4x4')).toHaveValue('2');
     expect(within(row).getByRole('button', { name: 'All 2 Gauze pads 4x4 are in your request' })).toBeDisabled();
-    expect(within(headerRequest()).getByLabelText('1 supply')).toBeInTheDocument();
+    expect(headerRequest()).toHaveTextContent('Your list (1)');
   });
 
   test('drawer opens from the header, focuses Close, edits, and closes with Escape', async () => {
     await renderAt('#/c/needles-and-syringes', /^Synthetic 10ml Syringe$/);
     userEvent.click(addButton('Synthetic 10ml Syringe'));
     userEvent.click(headerRequest());
-    const drawer = await screen.findByRole('dialog', { name: 'Your request' });
-    expect(within(drawer).getByRole('button', { name: 'Close your request' })).toHaveFocus();
+    const drawer = await screen.findByRole('dialog', { name: 'Your list' });
+    expect(within(drawer).getByRole('button', { name: 'Close your list' })).toHaveFocus();
     userEvent.click(within(drawer).getByRole('button', { name: 'One more Synthetic 10ml Syringe' }));
     expect(within(drawer).getByLabelText('Quantity of Synthetic 10ml Syringe')).toHaveValue('2');
     userEvent.keyboard('{esc}');
@@ -261,9 +283,9 @@ describe('request drawer', () => {
   test('empty drawer explains how to add and has no Review button', async () => {
     await renderAt('#/');
     userEvent.click(headerRequest());
-    const drawer = await screen.findByRole('dialog', { name: 'Your request' });
+    const drawer = await screen.findByRole('dialog', { name: 'Your list' });
     expect(within(drawer).getByText(/Nothing here yet/)).toBeInTheDocument();
-    expect(within(drawer).queryByRole('button', { name: 'Review request' })).not.toBeInTheDocument();
+    expect(within(drawer).queryByRole('button', { name: 'Review and send' })).not.toBeInTheDocument();
   });
 
   test('Remove offers Undo, which restores the line in place', async () => {
@@ -272,7 +294,7 @@ describe('request drawer', () => {
     go('#/c/gloves');
     userEvent.click(await screen.findByRole('button', { name: /^Add Nitrile gloves to request$/ }));
     userEvent.click(headerRequest());
-    const drawer = await screen.findByRole('dialog', { name: 'Your request' });
+    const drawer = await screen.findByRole('dialog', { name: 'Your list' });
     userEvent.click(within(drawer).getByRole('button', { name: 'Remove Synthetic 10ml Syringe' }));
     expect(await screen.findByText('Removed Synthetic 10ml Syringe from your request.')).toBeInTheDocument();
     userEvent.click(screen.getByRole('button', { name: /Undo/ }));
@@ -284,7 +306,7 @@ describe('request drawer', () => {
     userEvent.click(addButton('Synthetic 10ml Syringe'));
     unmount();
     await renderAt('#/');
-    expect(within(headerRequest()).getByLabelText('1 supply')).toBeInTheDocument();
+    expect(headerRequest()).toHaveTextContent('Your list (1)');
   });
 
   test('a 101st supply is refused with a toast', async () => {
@@ -295,9 +317,9 @@ describe('request drawer', () => {
     ));
     at('#/');
     render(<App />);
-    fireEvent.change(await screen.findByLabelText('Search supplies'), { target: { value: 'item 102' } });
+    fireEvent.change(await screen.findByLabelText('What do you need?'), { target: { value: 'item 102' } });
     userEvent.click(await screen.findByRole('button', { name: /^Add Bulk item 102 to request$/ }));
-    expect(await screen.findByText(/Your request is full\. It can include up to 100/)).toBeInTheDocument();
+    expect(await screen.findByText(/Your list is full\. It can include up to 100/)).toBeInTheDocument();
     expect(JSON.parse(window.localStorage.getItem(CART_KEY))).toHaveLength(100);
   }, 20000);
 
@@ -368,7 +390,7 @@ async function toReview() {
   go('#/c/other-supplies');
   userEvent.click(await screen.findByRole('button', { name: /^Add Gauze roll to request$/ }));
   userEvent.click(headerRequest());
-  userEvent.click(within(await screen.findByRole('dialog', { name: 'Your request' })).getByRole('button', { name: 'Review request' }));
+  userEvent.click(within(await screen.findByRole('dialog', { name: 'Your list' })).getByRole('button', { name: 'Review and send' }));
   await screen.findByRole('heading', { name: 'Review your request' });
 }
 
@@ -381,7 +403,7 @@ describe('review and confirmation', () => {
   test('validation blocks sending and focuses the first problem', async () => {
     await toReview();
     expect(window.location.hash).toBe('#/review');
-    userEvent.click(screen.getByRole('button', { name: 'Submit request' }));
+    userEvent.click(screen.getByRole('button', { name: 'Send request' }));
     expect(screen.getByText('Enter your clinic or organization name.')).toBeInTheDocument();
     expect(screen.getByLabelText('Clinic or organization name')).toHaveFocus();
     expect(posts).toHaveLength(0);
@@ -390,7 +412,7 @@ describe('review and confirmation', () => {
   test('submit -> confirmation -> My requests with status', async () => {
     await toReview();
     fill('  Riverside Clinic ', 'Staff@Riverside.org');
-    userEvent.click(screen.getByRole('button', { name: 'Submit request' }));
+    userEvent.click(screen.getByRole('button', { name: 'Send request' }));
     expect(await screen.findByRole('heading', { name: 'Request submitted' })).toHaveFocus();
     expect(screen.getByText(RID)).toBeInTheDocument();
     expect(window.location.hash).toBe(`#/sent/${RID}`);
@@ -423,7 +445,7 @@ describe('review and confirmation', () => {
     window.localStorage.setItem(CART_KEY, value);
     act(() => { window.dispatchEvent(new StorageEvent('storage', { key: CART_KEY, newValue: value })); });
     fill();
-    userEvent.click(screen.getByRole('button', { name: 'Submit request' }));
+    userEvent.click(screen.getByRole('button', { name: 'Send request' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Ghost product is no longer available. Remove it from your request, then submit again.');
     expect(posts).toHaveLength(0);
     expect(JSON.parse(window.localStorage.getItem(CART_KEY))).toHaveLength(3);
@@ -433,10 +455,10 @@ describe('review and confirmation', () => {
     await toReview();
     fill();
     handlers.submit = () => Promise.reject(new TypeError('Failed to fetch'));
-    userEvent.click(screen.getByRole('button', { name: 'Submit request' }));
+    userEvent.click(screen.getByRole('button', { name: 'Send request' }));
     await screen.findByRole('alert');
     handlers.submit = () => response(200, { request_id: RID, status: 'Under Review' });
-    userEvent.click(screen.getByRole('button', { name: 'Submit request' }));
+    userEvent.click(screen.getByRole('button', { name: 'Send request' }));
     await screen.findByRole('heading', { name: 'Request submitted' });
     expect(posts).toHaveLength(2);
     expect(posts[0].client_request_id).toMatch(/^[A-Za-z0-9-]{8,80}$/);
@@ -450,7 +472,7 @@ describe('review and confirmation', () => {
     go('#/review');
     await screen.findByRole('heading', { name: 'Review your request' });
     fill();
-    userEvent.click(screen.getByRole('button', { name: 'Submit request' }));
+    userEvent.click(screen.getByRole('button', { name: 'Send request' }));
     await screen.findByRole('heading', { name: 'Request submitted' });
     expect(posts[0].items[0].category).toHaveLength(200);
   });
@@ -463,7 +485,7 @@ describe('review and confirmation', () => {
     ]);
     await renderAt('#/c/iv-supplies', /^Saline flush$/);
     const row = rowFor('Saline flush');
-    expect(within(row).getByRole('button', { name: '2 lots' })).toHaveAttribute('aria-expanded', 'false');
+    expect(within(row).getByRole('button', { name: '2 batches' })).toHaveAttribute('aria-expanded', 'false');
     userEvent.click(within(row).getByRole('button', { name: /^Add Saline flush to request$/ }));
     const qty = within(row).getByLabelText('Quantity of Saline flush');
     userEvent.clear(qty);
@@ -471,7 +493,7 @@ describe('review and confirmation', () => {
     go('#/review');
     await screen.findByRole('heading', { name: 'Review your request' });
     fill();
-    userEvent.click(screen.getByRole('button', { name: 'Submit request' }));
+    userEvent.click(screen.getByRole('button', { name: 'Send request' }));
     await screen.findByRole('heading', { name: 'Request submitted' });
     expect(posts[0].items.map((i) => [i.sheet_row, i.quantity])).toEqual([[31, 2], [30, 2]]);
     // FE-13: HQ must be able to tell the two lines apart
@@ -483,7 +505,7 @@ describe('review and confirmation', () => {
     handlers.submit = () => new Promise((r) => { release = r; });
     await toReview();
     fill();
-    const send = screen.getByRole('button', { name: 'Submit request' });
+    const send = screen.getByRole('button', { name: 'Send request' });
     fireEvent.submit(send.closest('form'));
     fireEvent.submit(send.closest('form'));
     expect(posts).toHaveLength(1);
@@ -499,14 +521,14 @@ describe('review and confirmation', () => {
     handlers.submit = () => response(status, body);
     await toReview();
     fill();
-    userEvent.click(screen.getByRole('button', { name: 'Submit request' }));
+    userEvent.click(screen.getByRole('button', { name: 'Send request' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(message);
     expect(JSON.parse(window.localStorage.getItem(CART_KEY))).toHaveLength(2);
   });
 
   test('empty review page offers to browse', async () => {
     await renderAt('#/review', null);
-    expect(await screen.findByText('Your request is empty')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Your list is empty' })).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
@@ -549,7 +571,7 @@ describe('loading and errors', () => {
     userEvent.click(screen.getByRole('button', { name: /^Nitrile gloves$/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Nitrile gloves' });
     expect(window.location.hash).toBe('#/item/5');
-    expect(within(dialog).getByText(/HQ checks this supply by hand/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Our team checks this supply by hand/)).toBeInTheDocument();
     expect(dialog.querySelector('img')).toBeNull();
     userEvent.keyboard('{esc}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -574,7 +596,7 @@ describe('phone width', () => {
     userEvent.click(addButton('Synthetic 10ml Syringe'));
     expect(document.querySelector('.slipbar')).toBeNull();
     userEvent.click(headerRequest());
-    expect(await screen.findByRole('dialog', { name: 'Your request' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Your list' })).toBeInTheDocument();
   });
 });
 
@@ -613,7 +635,7 @@ describe('ordering, expiry and wording', () => {
 
   test('search results are alphabetical', async () => {
     await renderAt('#/');
-    fireEvent.change(screen.getByLabelText('Search supplies'), { target: { value: 'a' } });
+    fireEvent.change(screen.getByLabelText('What do you need?'), { target: { value: 'a' } });
     await screen.findByRole('heading', { level: 1, name: 'Results for “a”' });
     for (const table of document.querySelectorAll('table.spec')) {
       expect(isSorted([...table.querySelectorAll('tr.item-row .item-row__name')].map((b) => b.textContent))).toBe(true);
@@ -628,7 +650,7 @@ describe('ordering, expiry and wording', () => {
     const row = rowFor('Saline flush');
     expect(within(row).getByText('6 in stock')).toBeInTheDocument();
     expect(within(row).queryByRole('button', { name: /lots/ })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Search supplies'), { target: { value: 'saline' } });
+    fireEvent.change(screen.getByLabelText('What do you need?'), { target: { value: 'saline' } });
     await screen.findByRole('heading', { level: 1, name: 'Results for “saline”' });
     expect(screen.queryByRole('button', { name: /^Old saline bag$/ })).not.toBeInTheDocument();
     go('#/item/4'); // deep link to an expired row
@@ -652,7 +674,7 @@ describe('ordering, expiry and wording', () => {
     const link = within(screen.getByRole('contentinfo')).getByRole('link', { name: /contact@b4pglobal\.org/ });
     expect(link).toHaveAttribute('href', 'mailto:contact@b4pglobal.org');
     expect(screen.queryByText(/unlabelled/)).not.toBeInTheDocument();
-    expect(document.title).toMatch(/External Supply Request Dashboard/);
+    expect(document.title).toMatch(/Blueprints Supply Requests/);
   });
 });
 
@@ -688,15 +710,15 @@ describe('round 3: progressive rows, titles', () => {
 
   test('page titles carry the site name', async () => {
     await renderAt('#/c/gloves', /^Nitrile gloves$/);
-    expect(document.title).toBe('Gloves | External Supply Request Dashboard');
+    expect(document.title).toBe('Gloves | Blueprints Supply Requests');
     go('#/requests');
     await screen.findByRole('heading', { level: 1, name: 'My requests' });
-    expect(document.title).toBe('My requests | External Supply Request Dashboard');
+    expect(document.title).toBe('My requests | Blueprints Supply Requests');
   });
 
   test('matching-type tiles in search name their category', async () => {
     await renderAt('#/');
-    fireEvent.change(screen.getByLabelText('Search supplies'), { target: { value: 'glove' } });
+    fireEvent.change(screen.getByLabelText('What do you need?'), { target: { value: 'glove' } });
     await screen.findByRole('heading', { level: 1, name: 'Results for “glove”' });
     const tile = document.querySelector('a.tile');
     expect(tile.querySelector('.tile__cat')).toHaveTextContent(/^in Gloves$/);
@@ -710,58 +732,66 @@ describe('round 3: progressive rows, titles', () => {
   });
 });
 
-describe('round 4: collapsible landing cards', () => {
-  const KEY = 'b4p.landing.open.v1';
+describe('landing tiles', () => {
+  test('every page has a one-click help email at the top', async () => {
+    await renderAt('#/');
+    const help = within(screen.getByRole('banner')).getByRole('link', { name: 'Get help: email contact@b4pglobal.org' });
+    expect(help).toHaveAttribute('href', 'mailto:contact@b4pglobal.org?subject=Help%20with%20a%20supply%20request');
+  });
+
   const many = Array.from({ length: 9 }, (_, i) => supply(200 + i, {
     Name: `Wound thing ${i}`, General: ['gauze pad', 'medical tape', 'bandage roll', 'abdominal pad', 'wound dressing', 'skin protectant', 'tubular bandage', 'casting material', 'adhesive bandage'][i],
   }));
   beforeEach(() => {
     handlers.supplies = () => response(200, [...SUPPLIES, ...many]);
-    window.sessionStorage.clear();
   });
 
   const card = () => document.querySelector('.landing section.cat a[href="#/c/wound-care-and-bandages"]').closest('section');
 
-  test('a card shows 6 types until expanded; the toggle names its panel', async () => {
+  test('a tile is one link to its category, shows 6 kinds, and links to the rest', async () => {
     await renderAt('#/');
     const c = card();
-    const toggle = within(c).getByRole('button', { name: /Show all \d+ types/ });
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    const panel = document.getElementById(toggle.getAttribute('aria-controls'));
-    expect(panel).not.toBeNull();
-    expect(within(panel).getAllByRole('link')).toHaveLength(6);
-    userEvent.click(toggle);
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(toggle).toHaveTextContent('Show fewer');
-    expect(within(panel).getAllByRole('link').length).toBeGreaterThan(6);
-    expect(JSON.parse(window.sessionStorage.getItem(KEY))).toEqual(['wound-care-and-bandages']);
+    const title = within(c).getByRole('heading', { level: 2 });
+    expect(within(title).getAllByRole('link')).toHaveLength(1);
+    expect(title).toHaveTextContent(/Wound Care & Bandages\s*\d+ kinds of supplies/);
+    expect(within(c.querySelector('ul')).getAllByRole('link')).toHaveLength(6);
+    const all = within(c).getByRole('link', { name: /^See all \d+ kinds in Wound Care & Bandages/ });
+    expect(all).toHaveAttribute('href', '#/c/wound-care-and-bandages');
+    expect(c.querySelector('.cat__n, .cat__count')).toBeNull(); // no small counts next to each kind
   });
 
-  test('cards with 6 or fewer types have no toggle', async () => {
+  test('tiles with 6 or fewer kinds have no "See all" link', async () => {
     await renderAt('#/');
     const gloves = document.querySelector('.landing a[href="#/c/gloves"]').closest('section');
-    expect(within(gloves).queryByRole('button', { name: /Show all/ })).not.toBeInTheDocument();
+    expect(within(gloves).queryByRole('link', { name: /See all/ })).not.toBeInTheDocument();
   });
 
-  test('Expand all / Collapse all', async () => {
+  test('no Expand all; the category list is beside the tiles', async () => {
     await renderAt('#/');
-    userEvent.click(screen.getByRole('button', { name: 'Expand all' }));
-    expect(within(card()).getByRole('button', { name: 'Show fewer' })).toHaveAttribute('aria-expanded', 'true');
-    userEvent.click(screen.getByRole('button', { name: 'Collapse all' }));
-    expect(within(card()).getByRole('button', { name: /Show all/ })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: /Expand all|Show all/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Categories' })).toBeInTheDocument();
   });
 
-  test('open cards are remembered for the session', async () => {
-    window.sessionStorage.setItem(KEY, JSON.stringify(['wound-care-and-bandages']));
+  test('the big search box shows results', async () => {
     await renderAt('#/');
-    expect(within(card()).getByRole('button', { name: 'Show fewer' })).toBeInTheDocument();
+    userEvent.type(screen.getByLabelText('What do you need?'), 'glove');
+    userEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Results for “glove”' })).toBeInTheDocument();
   });
 
-  test.each(['{bad', '"x"', '[1,2]', '{"a":1}', JSON.stringify(['__proto__', 'constructor', 'not-a-category'])])(
-    'invalid saved state %s is ignored', async (raw) => {
-      window.sessionStorage.setItem(KEY, raw);
-      await renderAt('#/');
-      expect(within(card()).getByRole('button', { name: /Show all/ })).toHaveAttribute('aria-expanded', 'false');
-    },
-  );
+  test('first-timers get a link to the guide, and there is one step bar', async () => {
+    await renderAt('#/');
+    expect(screen.getByRole('link', { name: /First time here\?/ })).toHaveAttribute('href', '#/how-it-works');
+    expect(screen.getAllByRole('list', { name: 'Steps to request supplies' })).toHaveLength(1);
+  });
+
+  test('with the list open, only the list shows a step bar', async () => {
+    await renderAt('#/c/gloves', /^Nitrile gloves$/);
+    userEvent.click(addButton('Nitrile gloves'));
+    userEvent.click(headerRequest());
+    await screen.findByRole('dialog', { name: 'Your list' });
+    const bars = screen.getAllByRole('list', { name: 'Steps to request supplies' });
+    expect(bars).toHaveLength(1);
+    expect(within(bars[0]).getByText('Check your list').closest('li')).toHaveAttribute('aria-current', 'step');
+  });
 });

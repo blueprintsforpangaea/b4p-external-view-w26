@@ -28,6 +28,7 @@ export function useMediaQuery(query) {
 }
 
 // Routes: #/  #/c/<category>[/<type>]  #/requests  #/item/<row>  #/slip  #/review  #/sent/<id>
+//         #/signin[/review|/requests]  #/forgot  #/welcome/<invite token>  #/how-it-works
 // Only real request IDs render on the "submitted" page (no spoofed text via links).
 const REQUEST_ID_RE = /^REQ-\d+-[0-9a-z]+$/i;
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
@@ -35,6 +36,10 @@ export function parseHash(hash) {
   const path = String(hash || '').replace(/^#/, '').replace(/^\/+/, '');
   const [view, param, extra] = path.split('/');
   if (view === 'requests') return { view: 'requests' };
+  if (view === 'signin') return { view: 'signin', next: ['review', 'requests'].includes(param) ? param : null };
+  if (view === 'forgot') return { view: 'forgot' };
+  if (view === 'how-it-works') return { view: 'guide' };
+  if (view === 'welcome' && /^[A-Za-z0-9_-]{1,100}$/.test(param || '')) return { view: 'welcome', token: param };
   if (view === 'review' || view === 'checkout') return { view: 'checkout' };
   if (view === 'slip') return { view: 'slip' };
   if (view === 'sent' && REQUEST_ID_RE.test(param || '')) return { view: 'sent', id: param };

@@ -78,7 +78,7 @@ export default function Confirmation({ requestId, sent, onBrowse, onViewRequests
       <h2 className="section-title">What happens next</h2>
       <ol className="steps">
         <li>
-          <strong>HQ reviews your request.</strong> You’ll usually hear back within 48 hours.
+          <strong>Our team reviews your request.</strong> You’ll usually hear back within 48 hours.
         </li>
         <li>
           <strong>You get an email when it’s approved</strong>, and again when it ships.

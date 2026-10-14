@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ApiError, getAvailability, getSupplies, submitRequest } from './api';
 import { iconFor, ProductIconSprite, typeLabelFor } from './catalogIcons';
 import CategoryPage from './components/CategoryPage';
@@ -11,7 +11,10 @@ import Icon from './components/Icons';
 import ItemDetail from './components/ItemDetail';
 import Landing from './components/Landing';
 import MyRequests from './components/MyRequests';
+import Progress from './components/Progress';
 import RequestSlip from './components/RequestSlip';
+import { ForgotPassword, SignIn, Welcome } from './components/SignIn';
+import SearchBar from './components/SearchBar';
 import SearchResults from './components/SearchResults';
 import { EmptyState, ErrorState, SkeletonTable, WakingNotice } from './components/States';
 import { closeTo, navigate, useDebounced, useHashRoute, useMediaQuery } from './hooks';
@@ -22,11 +25,12 @@ import {
 } from './inventory';
 import { clearInventoryCache, readInventoryCache, writeInventoryCache } from './inventoryCache';
 import useCart, { MAX_LINES } from './useCart';
+import useAccount from './useAccount';
 import useOrg from './useOrg';
 import './styles.css';
 
 const DEFAULT_FILTERS = { inStockOnly: false, hideExpiring: false };
-const SITE_NAME = 'External Supply Request Dashboard';
+const SITE_NAME = 'Blueprints Supply Requests';
 const CONTACT_EMAIL = /^[^@\s<>"]+@[^@\s<>"]+\.[^@\s<>"]+$/.test(process.env.REACT_APP_CONTACT_EMAIL || '')
   ? process.env.REACT_APP_CONTACT_EMAIL
   : 'contact@b4pglobal.org';
@@ -37,7 +41,13 @@ function newClientId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
 }
 
-const TITLES = { requests: 'My requests', checkout: 'Review your request', sent: 'Request submitted' };
+const TITLES = {
+  requests: 'My requests', checkout: 'Review your request', sent: 'Request submitted',
+  signin: 'Sign in', forgot: 'Reset your password', welcome: 'Set up your account', guide: 'How to request supplies',
+};
+const AUTH_VIEWS = ['signin', 'forgot', 'welcome'];
+// The guide is long and read rarely, so it loads only when opened.
+const Guide = lazy(() => import('./components/Guide'));
 
 function enrich(rows) {
   return normalizeInventory(rows).map((item) => {
@@ -96,7 +106,7 @@ function useInventory() {
       .catch((err) => {
         const message = err instanceof ApiError
           ? err.message
-          : 'The supply list has data this page can’t read. Try again later, or let Blueprints HQ know.';
+          : 'The supply list has data this page can’t read. Try again later, or email the Blueprints team.';
         setInventory((s) => (s.items.length ? { ...s, error: message } : { ...s, status: 'error', error: message }));
       })
       .finally(() => setRefreshing(false));
@@ -120,7 +130,14 @@ export default function App() {
   const wide = useMediaQuery('(min-width: 1280px)'); // category tree shown
   const { inventory, slow, refreshing, holds, reload, reloadHolds } = useInventory();
   const cart = useCart();
-  const [org, setOrg] = useOrg();
+  const [savedOrg, setOrg] = useOrg();
+  const auth = useAccount();
+  // REACT_APP_AUTH_PREVIEW=off keeps today's guest checkout (the existing tests use it).
+  const authOn = process.env.REACT_APP_AUTH_PREVIEW !== 'off';
+  const account = authOn ? auth.account : null;
+  const { signedIn, signOut } = auth;
+  // Signed in: the clinic comes from the account, not from what was typed.
+  const org = useMemo(() => (account ? { name: account.org, email: account.email } : savedOrg), [account, savedOrg]);
 
   const [rawQuery, setRawQuery] = useState('');
   // Typing stays instant; results follow at lower priority.
@@ -230,7 +247,7 @@ export default function App() {
   const onQuantity = useCallback((item, n) => {
     if (n <= 0) offerUndo(item.id);
     if (!setQuantity(item, n)) {
-      setToast({ message: `Your request is full. It can include up to ${MAX_LINES} different supplies.` });
+      setToast({ message: `Your list is full. It can include up to ${MAX_LINES} different supplies.` });
     }
   }, [setQuantity, offerUndo]);
 
@@ -269,7 +286,7 @@ export default function App() {
       }));
     });
     if (payload.length > MAX_LINES) {
-      throw new ApiError(`This request covers ${payload.length} separate lots, and one request can include ${MAX_LINES}. Remove a few supplies and send them in a second request.`);
+      throw new ApiError(`This request covers ${payload.length} separate batches, and one request can include ${MAX_LINES}. Remove a few supplies and send them in a second request.`);
     }
     // One id per distinct request: a retry after a timeout resends the same id, so the server
     // returns the first request instead of creating a duplicate.
@@ -293,14 +310,46 @@ export default function App() {
     navigate(`/sent/${encodeURIComponent(res.request_id)}`, { replace: true });
   };
 
+  const onSignedIn = (next) => (acc, { welcome } = {}) => {
+    signedIn(acc);
+    setToast({ message: welcome ? `You’re all set. Signed in as ${acc.org}.` : `Signed in as ${acc.org}.` });
+    if (next !== undefined) navigate(next === 'review' ? '/review' : next === 'requests' ? '/requests' : '/', { replace: true });
+  };
+  const onSignOut = () => {
+    signOut();
+    setToast({ message: 'You’ve signed out. Your list is still saved on this device.' });
+    if (base.view === 'requests' || base.view === 'checkout') navigate('/');
+  };
+
   const openItem = useCallback((id) => navigate(`/item/${id}`), []);
   const tableProps = useMemo(() => ({ quantities, onQuantity, onOpenItem: openItem }), [quantities, onQuantity, openItem]);
 
   let main;
-  if (base.view === 'requests') {
+  if (base.view === 'signin') {
+    main = account ? (
+      <EmptyState level={1} title={`You’re signed in as ${account.org}`} action={<a className="btn btn--primary" href="#/">Browse supplies</a>}>
+        Signed in with {account.email}.
+      </EmptyState>
+    ) : <SignIn next={base.next} onSignedIn={onSignedIn(base.next)} contactEmail={CONTACT_EMAIL} />;
+  } else if (base.view === 'guide') {
+    main = (
+      <Suspense fallback={<p className="hint" role="status">Loading the guide…</p>}>
+        <Guide contactEmail={CONTACT_EMAIL} signedIn={!!account} />
+      </Suspense>
+    );
+  } else if (base.view === 'forgot') {
+    main = <ForgotPassword contactEmail={CONTACT_EMAIL} />;
+  } else if (base.view === 'welcome') {
+    main = <Welcome key={base.token} token={base.token} onSignedIn={onSignedIn(null)} contactEmail={CONTACT_EMAIL} />;
+  } else if (authOn && base.view === 'requests' && !account) {
+    main = <SignIn next="requests" onSignedIn={onSignedIn()} contactEmail={CONTACT_EMAIL} />;
+  } else if (authOn && base.view === 'checkout' && !account && cart.lines.length) {
+    main = <SignIn next="review" lineCount={cart.lines.length} onSignedIn={onSignedIn()} contactEmail={CONTACT_EMAIL} />;
+  } else if (base.view === 'requests') {
     main = (
       <MyRequests
         org={org}
+        account={account}
         onEmailChange={(email) => setOrg({ ...org, email })}
         highlightId={lastSent && lastSent.id}
         onBrowse={() => navigate('/')}
@@ -308,11 +357,11 @@ export default function App() {
     );
   } else if (base.view === 'checkout') {
     main = cart.lines.length ? (
-      <CheckoutForm lines={cart.lines} totalUnits={cart.totalUnits} org={org} onSubmit={handleSubmit} onBack={() => closeTo('/')} />
+      <CheckoutForm lines={cart.lines} totalUnits={cart.totalUnits} org={org} account={account} onSignOut={onSignOut} onSubmit={handleSubmit} onBack={() => closeTo('/')} />
     ) : (
       <EmptyState
         level={1}
-        title="Your request is empty"
+        title="Your list is empty"
         action={<button type="button" className="btn btn--primary" onClick={() => navigate('/')}>Browse supplies</button>}
       >
         Add supplies from the list, then come back here to submit your request.
@@ -372,16 +421,17 @@ export default function App() {
     } else if (catalogTotal === 0) {
       page = (
         <EmptyState title="No supplies are listed right now">
-          Blueprints HQ updates the list as donations arrive. Check back soon.
+          The Blueprints team updates the list as donations arrive. Check back soon.
         </EmptyState>
       );
     } else {
-      page = <Landing catalog={catalog} total={catalogTotal} />;
+      page = <Landing catalog={catalog} />;
     }
 
+    const showTree = wide && inventory.status === 'done';
     main = (
-      <div className="shop">
-        {wide && inventory.status === 'done' && (
+      <div className={`shop${showTree ? '' : ' shop--full'}`}>
+        {showTree && (
           <aside className="shop__tree">
             <CategoryTree
               catalog={catalog}
@@ -406,6 +456,9 @@ export default function App() {
           {inventory.status === 'done' && !inventory.fresh && !inventory.error && slow && (
             <p className="stale" role="status">Showing the list saved on this device while the server wakes up.</p>
           )}
+          {/* One step bar on screen: the list drawer shows its own (step 2). */}
+          {inventory.status === 'done' && route.view !== 'slip' && <Progress step={1} />}
+          {inventory.status === 'done' && <SearchBar value={rawQuery} onChange={onQuery} />}
           {page}
         </div>
       </div>
@@ -425,19 +478,23 @@ export default function App() {
       <Header
         view={base.view}
         lineCount={cart.lines.length}
+        units={cart.totalUnits}
         onOpenSlip={() => navigate('/slip')}
         onOpenCategories={!wide && inCatalog && inventory.status === 'done' ? () => setCatsOpen(true) : null}
-        query={rawQuery}
-        onQuery={onQuery}
-        total={catalogTotal}
+        onHome={() => setRawQuery('')}
         siteName={SITE_NAME}
+        account={account}
+        onSignOut={onSignOut}
+        authPage={AUTH_VIEWS.includes(base.view)}
+        showSignIn={authOn}
+        contactEmail={CONTACT_EMAIL}
       />
       <main id="main" tabIndex={-1} className="main">
         {main}
       </main>
       <footer className="footer">
-        <p>
-          Can’t find what you need? <a href={`mailto:${CONTACT_EMAIL}`}>Email us at {CONTACT_EMAIL}</a>
+        <p className="footer__help">
+          Need help? Email <a className="footer__email" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         </p>
       </footer>
 
@@ -510,6 +567,10 @@ export default function App() {
 function routePath(r) {
   if (r.view === 'category') return `/c/${r.slug}${r.type ? `/${r.type}` : ''}`;
   if (r.view === 'requests') return '/requests';
+  if (r.view === 'signin') return `/signin${r.next ? `/${r.next}` : ''}`;
+  if (r.view === 'forgot') return '/forgot';
+  if (r.view === 'guide') return '/how-it-works';
+  if (r.view === 'welcome') return `/welcome/${r.token}`;
   if (r.view === 'checkout') return '/review';
   if (r.view === 'sent') return `/sent/${r.id}`;
   return '/';

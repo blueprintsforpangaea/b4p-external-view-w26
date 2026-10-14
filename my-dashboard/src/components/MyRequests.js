@@ -10,7 +10,7 @@ function StatusTrack({ status }) {
   if (info.stopped) {
     return (
       <p className="req__stopped">
-        <Icon name="alert" size={20} /> <strong>{info.label}.</strong> Contact Blueprints HQ if you have questions about this request.
+        <Icon name="alert" size={20} /> <strong>{info.label}.</strong> Email the Blueprints team if you have questions about this request.
       </p>
     );
   }
@@ -37,7 +37,7 @@ function StatusTrack({ status }) {
   );
 }
 
-export default function MyRequests({ org, onEmailChange, highlightId, onBrowse }) {
+export default function MyRequests({ org, account, onEmailChange, highlightId, onBrowse }) {
   const [email, setEmail] = useState(org.email);
   const [lookedUp, setLookedUp] = useState(org.email && EMAIL_RE.test(org.email) ? org.email : '');
   const [state, setState] = useState({ status: 'idle', groups: [], error: null });
@@ -84,6 +84,14 @@ export default function MyRequests({ org, onEmailChange, highlightId, onBrowse }
   return (
     <div className="requests">
       <h1 className="page-title">My requests</h1>
+      {account ? (
+        <div className="requests__who">
+          <p>Requests sent by <strong>{account.org}</strong> from {account.email}.</p>
+          <button type="button" className="btn btn--quiet btn--sm" onClick={() => load(account.email)} disabled={loading}>
+            <Icon name="refresh" size={18} /> Refresh
+          </button>
+        </div>
+      ) : (
       <form className="lookup" onSubmit={onLookup} noValidate>
         <div className={`field${emailError ? ' field--error' : ''}`}>
           <label htmlFor="lookup-email">Email used for your requests</label>
@@ -105,6 +113,7 @@ export default function MyRequests({ org, onEmailChange, highlightId, onBrowse }
           {emailError && <p className="field__error" id="lookup-error">{emailError}</p>}
         </div>
       </form>
+      )}
 
       {loading && slow && <WakingNotice />}
       {loading && state.groups.length === 0 && (
@@ -124,7 +133,9 @@ export default function MyRequests({ org, onEmailChange, highlightId, onBrowse }
           title="No requests for this email yet"
           action={<button type="button" className="btn btn--primary" onClick={onBrowse}>Browse supplies</button>}
         >
-          Requests sent with {lookedUp} will show up here. If you used a different address, enter it above.
+          {account
+            ? 'When your clinic sends a request, it shows up here with its status.'
+            : `Requests sent with ${lookedUp} will show up here. If you used a different address, enter it above.`}
         </EmptyState>
       )}
 

@@ -4,6 +4,8 @@ import { badgesFor, formatExpiry, formatMonth, stockLabel } from '../inventory';
 import Badges from './Badges';
 import RequestControl from './RequestControl';
 
+const batches = (n) => `${n} ${n === 1 ? 'batch' : 'batches'}`;
+
 // The sheet's generic name, unless it just repeats the row or group name.
 function showGeneral(item, group) {
   const bare = (t) => t.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/s$/, '').replace(/e$/, '');
@@ -30,7 +32,7 @@ const ProductRow = memo(function ProductRow({ p, group, quantity, onQuantity, on
           <Badges badges={badgesFor(p, p.onHold)} />
         </td>
         <td className="spec__maker" data-label="Maker">{p.manufacturer || '–'}</td>
-        <td className="spec__lot num" data-label="Lot" title={many ? undefined : p.lot || undefined}>
+        <td className="spec__lot num" data-label={many ? undefined : 'Batch'} title={many ? undefined : p.lot || undefined}>
           {many ? (
             <button
               type="button"
@@ -39,17 +41,16 @@ const ProductRow = memo(function ProductRow({ p, group, quantity, onQuantity, on
               aria-controls={lotsId}
               onClick={() => setExpanded((v) => !v)}
             >
-              {p.lots.length} lots
+              {batches(p.lots.length)}
             </button>
           ) : (p.lot || '–')}
         </td>
-        <td className="spec__exp num" data-label="Expires" title={p.expiry ? formatExpiry(p.expiry) : undefined}>
-          {/* Month only in the table; the lot breakdown and detail show the full date. */}
-          {!p.expiry ? '–' : <>{many && <span className="exp-from">from </span>}{formatMonth(p.expiry)}</>}
+        <td className="spec__exp num" title={p.expiry ? formatExpiry(p.expiry) : undefined}>
+          {/* Month only in the table; the batch breakdown and detail show the full date. */}
+          {!p.expiry ? '–' : `Use by ${formatMonth(p.expiry)}`}
         </td>
-        <td className="spec__stock num" data-label="In stock">
-          <span className="visually-hidden">{p.onHold ? 'On hold' : stockLabel(p.quantity)}</span>
-          <span aria-hidden="true">{p.onHold ? '–' : qty(p.quantity)}</span>
+        <td className="spec__stock num">
+          {p.onHold ? 'On hold' : stockLabel(p.quantity)}
         </td>
         <td className="spec__qty">
           <RequestControl item={p} quantity={quantity} onChange={(n) => onQuantity(p, n)} compact />
@@ -59,12 +60,12 @@ const ProductRow = memo(function ProductRow({ p, group, quantity, onQuantity, on
         <tr className="lots-row" id={lotsId}>
           <td colSpan={6}>
             <table className="lots">
-              <caption className="visually-hidden">Lots of {p.name}</caption>
+              <caption className="visually-hidden">Batches of {p.name}</caption>
               <thead>
                 <tr>
-                  <th scope="col">Lot</th>
+                  <th scope="col">Batch</th>
                   <th scope="col">Box</th>
-                  <th scope="col">Expires</th>
+                  <th scope="col">Use by</th>
                   <th scope="col" className="lots__qty">In stock</th>
                 </tr>
               </thead>
@@ -72,7 +73,7 @@ const ProductRow = memo(function ProductRow({ p, group, quantity, onQuantity, on
                 {p.lots.map((l) => (
                   <tr key={l.id}>
                     <td>{l.lot || '–'}</td>
-                    <td>{[l.box && `Box ${l.box}`, l.pallet && `pallet ${l.pallet}`].filter(Boolean).join(', ') || '–'}</td>
+                    <td>{l.box ? `Box ${l.box}` : '–'}</td>
                     <td>{l.expiry ? formatExpiry(l.expiry) : '–'}</td>
                     <td className="lots__qty">{qty(l.quantity)}</td>
                   </tr>
@@ -106,8 +107,8 @@ function TypeTable({ group, quantities, onQuantity, onOpenItem, limit, headingLe
           <tr>
             <th scope="col" className="spec__supply">Supply</th>
             <th scope="col" className="spec__maker">Maker</th>
-            <th scope="col" className="spec__lot">Lot</th>
-            <th scope="col" className="spec__exp">Expires</th>
+            <th scope="col" className="spec__lot">Batch</th>
+            <th scope="col" className="spec__exp">Use by</th>
             <th scope="col" className="spec__stock">In stock</th>
             <th scope="col" className="spec__qty"><span className="visually-hidden">Quantity to request</span></th>
           </tr>
