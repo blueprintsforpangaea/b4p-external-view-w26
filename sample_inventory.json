@@ -1,0 +1,8 @@
+[
+  {"Name": "Gauze pads", "Category": "Wound care", "Quantity": "120", "Review": ""},
+  {"Name": "Adhesive bandages", "Category": "Wound care", "Quantity": "300", "Review": ""},
+  {"Name": "Nitrile gloves (M)", "Category": "PPE", "Quantity": "40", "Review": ""},
+  {"Name": "Surgical masks", "Category": "PPE", "Quantity": "4", "Review": ""},
+  {"Name": "Syringes 5 mL", "Category": "Injection", "Quantity": "60", "Review": "Review needed"},
+  {"Name": "Thermometer", "Category": "Diagnostics", "Quantity": "", "Review": ""}
+]

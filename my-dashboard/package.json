@@ -16,7 +16,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "budget": "node scripts/check-budget.js",
+    "perf": "node scripts/perf-timing.js",
+    "icons": "CI=true react-scripts test --watchAll=false src/iconCoverage.test.js"
   },
   "eslintConfig": {
     "extends": [

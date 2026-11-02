@@ -1,13 +1,25 @@
 {
-  "short_name": "B4P Requests",
-  "name": "B4P Request System",
+  "short_name": "Supply Requests",
+  "name": "Blueprints Supply Requests",
   "icons": [
-    { "src": "favicon.ico", "sizes": "64x64 48x48 32x32 16x16", "type": "image/x-icon" },
-    { "src": "logo192.png", "type": "image/png", "sizes": "192x192" },
-    { "src": "logo512.png", "type": "image/png", "sizes": "512x512" }
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 48x48 32x32 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#0a1f5c",
+  "theme_color": "#0337a3",
   "background_color": "#ffffff"
 }

@@ -16,3 +16,18 @@ venv/
 # Python cache (Speeds up execution, but messy to share)
 __pycache__/
 *.pyc
+# Small demo inventory for USE_SAMPLE_DATA=1
+!sample_inventory.json
+
+# Local only: design mockups, the Impeccable design tool, and the member roster (personal data).
+mockups/
+.claude/
+.impeccable/
+members.local.json
+
+# Local only: clinic and team accounts while testing without the database (app/accounts.py).
+.local-accounts.sqlite3*
+
+# Local only: parked webhook settings and .env backups (secrets).
+.env.*
+!.env.example
