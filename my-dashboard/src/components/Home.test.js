@@ -4,14 +4,16 @@ import Home from './Home';
 
 const STATS = [[12, 'Supply types available'], [3, 'Categories'], [450, 'Units recorded', 'Approximate total'], [2, 'Expiring within 90 days']];
 
-test('the main page: welcome, search, notice, totals, inventory, steps and contact, in that order', () => {
+test('the main page: welcome, notice, totals, search and inventory, steps and contact, in that order', () => {
   render(
     <Home stats={STATS} contactEmail="help@example.org" onSearch={() => {}}>
       <p>the list</p>
     </Home>,
   );
   expect(screen.getByRole('heading', { level: 1, name: 'Welcome, clinic' })).toHaveFocus();
-  expect(screen.getByRole('combobox', { name: 'Search supplies' })).toBeInTheDocument();
+  const inventory = screen.getByRole('region', { name: 'Supply inventory' });
+  expect(within(inventory).getByRole('combobox', { name: 'Search supplies' })).toBeInTheDocument(); // right above the list
+  expect(screen.getByRole('link', { name: 'Find supplies' })).toHaveAttribute('href', '#/inventory');
   expect(screen.getByRole('link', { name: 'How requesting works' })).toHaveAttribute('href', '#/how-it-works');
   expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '#/signin');
   expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([

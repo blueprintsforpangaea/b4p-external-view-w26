@@ -3,7 +3,7 @@ import { toSection } from './Header';
 import SearchBox from './SearchBox';
 
 // The whole site on one scrolling page, in the order of the chapter inventory site:
-// welcome and search, what to know first, totals, the inventory (`children`), how requesting
+// welcome, what to know first, totals, search and the inventory (`children`), how requesting
 // works, contact. The header links jump to #/inventory, #/how-it-works and #/contact.
 
 const STEPS = [
@@ -37,15 +37,8 @@ export default function Home({ clinic, search = '', onSearch, suggestIndex, stat
             Use this page to find donated supplies and request them for your clinic. Anyone can look; you sign
             in with your work email when you send a request.
           </p>
-          <form className="home__search" role="search" onSubmit={toList}>
-            <label className="home__search-label" htmlFor="supply-search">Search supplies</label>
-            <div className="home__search-row">
-              <SearchBox value={search} onChange={onSearch} onPick={toList} index={suggestIndex} />
-              <button type="submit" className="btn btn--primary btn--lg">Search</button>
-            </div>
-            <p className="home__hint" id="search-hint">Search by supply name, maker, batch or category.</p>
-          </form>
           <div className="home__actions">
+            <a className="btn btn--primary btn--lg" href="#/inventory" onClick={toSection}>Find supplies</a>
             <a className="btn btn--secondary btn--lg" href="#/how-it-works" onClick={toSection}>How requesting works</a>
             {!clinic && <a className="btn btn--secondary btn--lg" href="#/signin">Sign in</a>}
           </div>
@@ -76,6 +69,14 @@ export default function Home({ clinic, search = '', onSearch, suggestIndex, stat
 
       <section className="inv" id="inventory" aria-labelledby="inventory-title">
         <h2 className="home__how-title" id="inventory-title">Supply inventory</h2>
+        <form className="home__search" role="search" onSubmit={toList}>
+          <label className="home__search-label" htmlFor="supply-search">Search supplies</label>
+          <div className="home__search-row">
+            <SearchBox value={search} onChange={onSearch} onPick={toList} index={suggestIndex} />
+            <button type="submit" className="btn btn--primary btn--lg">Search</button>
+          </div>
+          <p className="home__hint" id="search-hint">Search by supply name, maker, batch or category.</p>
+        </form>
         {children}
       </section>
 
