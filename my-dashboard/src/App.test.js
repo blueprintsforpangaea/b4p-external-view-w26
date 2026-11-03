@@ -287,7 +287,7 @@ describe('review and confirmation', () => {
     expect(posts).toHaveLength(0);
   });
 
-  test('submit -> confirmation -> My requests with status', async () => {
+  test('submit -> confirmation (no request history while sign-in is off)', async () => {
     await toReview();
     fill('  Riverside Clinic ', 'Staff@Riverside.org');
     userEvent.click(screen.getByRole('button', { name: 'Send request' }));
@@ -307,15 +307,12 @@ describe('review and confirmation', () => {
     expect(JSON.parse(window.localStorage.getItem(CART_KEY))).toEqual([]);
     expect(JSON.parse(window.localStorage.getItem(ORG_KEY))).toEqual({ name: 'Riverside Clinic', email: 'Staff@Riverside.org' });
 
-    handlers.mine = () => response(200, [
-      { 'Request ID': RID, 'Item Name': 'Synthetic 10ml Syringe', 'Quantity Requested': '1', Status: 'Approved', Timestamp: '2026-10-09T12:00:00+00:00' },
-    ]);
-    userEvent.click(screen.getByRole('button', { name: 'View my requests' }));
-    expect(await screen.findByRole('heading', { name: /^Sent / })).toBeInTheDocument();
-    expect(screen.getByText('Approved')).toBeInTheDocument();
-    expect(screen.queryByText(RID)).not.toBeInTheDocument();
-    expect(screen.queryByRole('list', { name: /^Status/ })).not.toBeInTheDocument(); // no step tracker
-    expect(calls.filter((c) => c.path.startsWith('/requests?email=')).every((c) => c.init.cache === 'no-cache')).toBe(true);
+    // History needs an account: nothing offers it, and its old address goes back to the supplies.
+    expect(screen.queryByRole('button', { name: 'View my requests' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/under My requests/)).not.toBeInTheDocument();
+    act(() => { window.location.hash = '#/requests'; window.dispatchEvent(new HashChangeEvent('hashchange')); });
+    await waitFor(() => expect(window.location.hash).not.toBe('#/requests'));
+    expect(calls.some((c) => c.path.startsWith('/requests?email='))).toBe(false);
   });
 
   test('a line whose product vanished (stale tab) blocks submit with a message', async () => {

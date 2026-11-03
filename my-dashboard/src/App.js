@@ -143,7 +143,9 @@ export default function App() {
   useEffect(() => {
     if (hashRoute.view === 'team' && !teamMember) navigate('/team/signin', { replace: true });
     if (hashRoute.view === 'team-signin' && teamMember) navigate('/team', { replace: true });
-  }, [hashRoute.view, teamMember]);
+    // Request history needs an account, so with sign-in off there is none to show.
+    if (hashRoute.view === 'requests' && !authOn) navigate('/supplies', { replace: true });
+  }, [hashRoute.view, teamMember, authOn]);
 
   const [rawQuery, setRawQuery] = useState('');
   // Typing stays instant; results follow at lower priority.
@@ -440,7 +442,7 @@ export default function App() {
       <Confirmation
         sent={lastSent}
         onBrowse={() => navigate('/supplies')}
-        onViewRequests={() => navigate('/requests')}
+        onViewRequests={authOn ? () => navigate('/requests') : null}
       />
     );
   }

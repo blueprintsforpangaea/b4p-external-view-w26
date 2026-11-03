@@ -45,14 +45,16 @@ export default function Confirmation({ sent, onBrowse, onViewRequests }) {
         <li>
           <strong>You get an email when it’s approved</strong>, and again when it ships.
         </li>
-        <li>
-          <strong>Check on it any time</strong> under My requests.
-        </li>
+        {onViewRequests && (
+          <li>
+            <strong>Check on it any time</strong> under My requests.
+          </li>
+        )}
       </ol>
 
       <div className="confirm__actions no-print">
         <button type="button" className="btn btn--primary" onClick={onBrowse}>Request more supplies</button>
-        <button type="button" className="btn btn--secondary" onClick={onViewRequests}>View my requests</button>
+        {onViewRequests && <button type="button" className="btn btn--secondary" onClick={onViewRequests}>View my requests</button>}
         <button type="button" className="btn btn--secondary" onClick={() => window.print()}>Print</button>
       </div>
     </div>
