@@ -6,13 +6,14 @@ import SearchBox from './SearchBox';
 // welcome, what to know first, totals, search and the inventory (`children`), how requesting
 // works, contact. The header links jump to #/inventory, #/how-it-works and #/contact.
 
-const STEPS = [
+const steps = (signIn) => [
   ['Find what you need', <>Search or filter the list above. Check the quantity, availability and expiration date.</>],
-  ['Add it and send your list', <>Click <strong>+ Add to list</strong>, then open <strong>Your list</strong> and click <strong>Review and send</strong>. You sign in with your work email before it sends.</>],
+  ['Add it and send your list', <>Click <strong>+ Add to list</strong>, then open <strong>Your list</strong> and click <strong>Review and send</strong>.
+    {signIn ? ' You sign in with your work email before it sends.' : ' Give your clinic’s name and work email so we can reach you.'}</>],
   ['We confirm with you', <>A Blueprints team member checks what is on hand and emails you when your request is approved, and again when it ships.</>],
 ];
 
-export default function Home({ clinic, search = '', onSearch, suggestIndex, stats, contactEmail, children }) {
+export default function Home({ clinic, search = '', onSearch, suggestIndex, stats, contactEmail, signIn = true, children }) {
   const titleRef = useRef(null);
   // Focus the heading for screen readers without scrolling away from a section someone jumped to.
   useEffect(() => titleRef.current && titleRef.current.focus({ preventScroll: true }), []);
@@ -34,13 +35,13 @@ export default function Home({ clinic, search = '', onSearch, suggestIndex, stat
             supplies and redistributes them to clinics, hospitals and communities that need them.
           </p>
           <p className="home__lede">
-            Use this page to find donated supplies and request them for your clinic. Anyone can look; you sign
-            in with your work email when you send a request.
+            Use this page to find donated supplies and request them for your clinic.
+            {signIn ? ' Anyone can look; you sign in with your work email when you send a request.' : ' Anyone can look and send a request.'}
           </p>
           <div className="home__actions">
             <a className="btn btn--primary btn--lg" href="#/inventory" onClick={toSection}>Find supplies</a>
             <a className="btn btn--secondary btn--lg" href="#/how-it-works" onClick={toSection}>How requesting works</a>
-            {!clinic && <a className="btn btn--secondary btn--lg" href="#/signin">Sign in</a>}
+            {signIn && !clinic && <a className="btn btn--secondary btn--lg" href="#/signin">Sign in</a>}
           </div>
         </div>
       </section>
@@ -83,7 +84,7 @@ export default function Home({ clinic, search = '', onSearch, suggestIndex, stat
       <section className="home__how" id="how-it-works" aria-labelledby="how-title">
         <h2 className="home__how-title" id="how-title">How to request supplies</h2>
         <ol className="home__steps">
-          {STEPS.map(([title, text]) => (
+          {steps(signIn).map(([title, text]) => (
             <li key={title}><h3 className="home__step-title">{title}</h3><p>{text}</p></li>
           ))}
         </ol>

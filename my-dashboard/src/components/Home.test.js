@@ -43,3 +43,10 @@ test('typing searches; the Search button jumps to the inventory', () => {
   userEvent.click(screen.getByRole('button', { name: 'Search' }));
   expect(jump).toHaveBeenCalled();
 });
+
+test('with sign-in off, nothing asks the clinic to sign in', () => {
+  render(<Home signIn={false} onSearch={() => {}} />);
+  expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument();
+  expect(screen.queryByText(/sign in/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/Give your clinic’s name and work email/)).toBeInTheDocument();
+});

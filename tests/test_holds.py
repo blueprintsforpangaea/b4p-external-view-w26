@@ -101,9 +101,15 @@ def test_a_line_without_a_batch_cannot_hold_more_than_the_name_has(sheet_client)
     assert _ask(c, "Syringe", 3, sheet_row=False).status_code == 200
 
 
-def test_the_live_site_needs_sign_in_to_send(sheet_client, monkeypatch):
+def test_the_live_site_needs_sign_in_to_send_once_accounts_have_a_database(sheet_client, monkeypatch):
     monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setattr(main.db, "enabled", lambda: True)
     r = sheet_client.post("/requests", json={"org_name": "O", "org_email": "o@example.org",
                                              "items": [{"item_name": "Gauze", "quantity": 1}]})
     assert r.status_code == 401 and "sign in" in r.json()["detail"]
     assert main._sample_org_request_rows == []
+
+
+def test_with_no_database_the_live_site_takes_a_name_and_email(sheet_client, monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+    assert _ask(sheet_client, "Gauze", 1).status_code == 200

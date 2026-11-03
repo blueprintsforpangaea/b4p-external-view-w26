@@ -1419,7 +1419,8 @@ def _copy_to_request_sheet(request_id: str, body: "OrgRequestBody", flags: list[
 
 
 def _sign_in_required() -> bool:
-    return accounts._deployed()
+    # Accounts live only in the database once deployed: with none, clinics send with name and email.
+    return accounts._deployed() and db.enabled()
 
 
 @app.post("/requests")

@@ -372,7 +372,7 @@ export default function App() {
       );
     }
     main = (
-      <Home clinic={account ? account.org : null} search={rawQuery} onSearch={setRawQuery} suggestIndex={suggestIndex} contactEmail={CONTACT_EMAIL}
+      <Home clinic={account ? account.org : null} search={rawQuery} onSearch={setRawQuery} suggestIndex={suggestIndex} contactEmail={CONTACT_EMAIL} signIn={authOn}
         stats={inventory.status === 'done' && products.length ? stats : null}>
         {inventory.status === 'done' && inventory.error && (
           <div className="stale" role="status">
@@ -478,11 +478,11 @@ export default function App() {
         <p className="footer__help">
           Need help? Email <a className="footer__email" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         </p>
-        <p className="footer__team">
+        {authOn && <p className="footer__team">
           {teamMember
             ? <a href="#/team">Blueprints team dashboard</a>
             : <a href="#/team/signin">Blueprints team sign in</a>}
-        </p>
+        </p>}
         {showDataSource() && <DataSource />}
       </footer>
 
