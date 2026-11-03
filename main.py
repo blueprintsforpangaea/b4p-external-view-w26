@@ -626,7 +626,10 @@ def _open_spreadsheet():
 
 
 def _open_requests_spreadsheet():
-    sheet_id = os.environ.get("REQUESTS_SHEET_ID") or os.environ.get("GOOGLE_SHEET_ID")
+    # The live site writes to the "Requests" spreadsheet (the same one its Apps Script uses), not
+    # the inventory doc; REQUESTS_SHEET_ID still overrides it.
+    live = request_webhook.PRODUCTION[0] if os.environ.get("VERCEL") else ""
+    sheet_id = os.environ.get("REQUESTS_SHEET_ID") or live or os.environ.get("GOOGLE_SHEET_ID")
     if not sheet_id:
         raise HTTPException(status_code=500, detail="Missing REQUESTS_SHEET_ID.")
     client = _gspread_client()

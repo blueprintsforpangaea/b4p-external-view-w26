@@ -176,6 +176,22 @@ def test_tests_cannot_reach_the_live_sheet(monkeypatch):
         main._gspread_client()
 
 
+@pytest.mark.parametrize("vercel, override, expected", [
+    ("1", "", "1k0rX_GZEkFppF8hC_JtN7pM9pRHEuHeYOXcsSJ23TTY"),  # live site: the Requests spreadsheet
+    ("1", "override-id", "override-id"),
+    ("", "", "inventory-id"),  # on a computer: the inventory doc, as before
+])
+def test_requests_spreadsheet_on_the_live_site(monkeypatch, vercel, override, expected):
+    import main
+    opened = []
+    monkeypatch.setattr(main, "_gspread_client", lambda: type("C", (), {"open_by_key": lambda self, k: opened.append(k)})())
+    monkeypatch.setenv("VERCEL", vercel)
+    monkeypatch.setenv("REQUESTS_SHEET_ID", override)
+    monkeypatch.setenv("GOOGLE_SHEET_ID", "inventory-id")
+    main._open_requests_spreadsheet()
+    assert opened == [expected]
+
+
 def test_dotenv_is_not_loaded_on_hosted_platforms(tmp_path):
     """Run main in a subprocess with a .env that would set a variable: only local runs read it."""
     import subprocess
