@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Home from './Home';
 
-const STATS = [[12, 'Supply types available'], [3, 'Categories'], [450, 'Units recorded', 'Approximate total'], [2, 'Expiring within 90 days']];
+const STATS = [[12, 'Supply types available'], [3, 'Categories', 'A hint']];
 
 test('the main page: welcome, notice, totals, search and inventory, steps and contact, in that order', () => {
   render(
@@ -20,7 +20,7 @@ test('the main page: welcome, notice, totals, search and inventory, steps and co
     'Please read before requesting', 'Supply inventory', 'How to request supplies', 'Contact B4P',
   ]);
   const totals = screen.getByRole('region', { name: 'Inventory totals' });
-  expect(within(totals).getByText('450')).toBeInTheDocument();
+  expect(within(totals).getByText('12')).toBeInTheDocument();
   expect(within(screen.getByRole('region', { name: 'Supply inventory' })).getByText('the list')).toBeInTheDocument();
   expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(3);
   expect(screen.getByRole('link', { name: 'help@example.org' })).toHaveAttribute('href', 'mailto:help@example.org');

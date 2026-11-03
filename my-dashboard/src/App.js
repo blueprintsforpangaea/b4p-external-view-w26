@@ -169,8 +169,6 @@ export default function App() {
   const stats = useMemo(() => [
     [products.filter(canRequest).length, 'Supply types available'],
     [new Set(products.map((p) => p.subcategory)).size, 'Categories'],
-    [products.reduce((n, p) => n + (p.quantity || 0), 0), 'Units recorded', 'Approximate total, where a count is recorded'],
-    [products.filter((p) => p.expiryState === 'soon').length, 'Expiring within 90 days'],
   ], [products]);
   // What the search box suggests: every supply name and category in the list.
   const suggestIndex = useMemo(() => buildIndex(
