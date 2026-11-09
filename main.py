@@ -568,7 +568,8 @@ def _read_sheet_inventory() -> list[dict]:
     # The INVENTORY_TAB tab unless INVENTORY_WORKSHEET_TITLE names another (the read-only public
     # path uses the same default). A tab named in the setting must exist; without the setting and
     # without that tab, the first tab is read and a warning logged.
-    title = os.environ.get("INVENTORY_WORKSHEET_TITLE", "").strip()
+    # On Vercel the tab is fixed too, so a stale INVENTORY_WORKSHEET_TITLE there can't override it.
+    title = "" if os.environ.get("VERCEL") else os.environ.get("INVENTORY_WORKSHEET_TITLE", "").strip()
     try:
         sheet = spreadsheet.worksheet(title or INVENTORY_TAB)
     except gspread.WorksheetNotFound:

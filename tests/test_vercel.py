@@ -296,5 +296,7 @@ def test_inventory_spreadsheet_and_tab_on_the_live_site(monkeypatch, vercel, exp
     monkeypatch.setattr(main, "_gspread_client", lambda: type("C", (), {"open_by_key": lambda self, k: opened.append(k) or SS()})())
     monkeypatch.setenv("VERCEL", vercel)
     monkeypatch.setenv("GOOGLE_SHEET_ID", "inventory-id")
+    if vercel:  # a stale tab setting on Vercel is ignored
+        monkeypatch.setenv("INVENTORY_WORKSHEET_TITLE", "Final Inventorying")
     main._read_sheet_inventory()
     assert opened == [expected] and tabs == ["CLASSIFIED Inventorying Responses"]
