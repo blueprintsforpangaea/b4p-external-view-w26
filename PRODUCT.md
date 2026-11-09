@@ -24,7 +24,7 @@ The supplies are donated surplus, free to partner clinics, listed straight from 
 
 ## Operating Context
 
-- Inventory is the "Final Inventorying" tab of the team's Google Sheet: about 2,400 rows; columns Manufacturer Name, Category, Subcategory, General, Name, Lot Number, Notes, Quantity, Date of Expiration, Pallet Number, Box Number, Image URL, Review. The site groups rows by Subcategory (12 groups such as Airway & Oxygen, IV Supplies, Needles & Syringes) and by kind of supply.
+- Inventory is the "CLASSIFIED Inventorying Responses" tab of the team's Google Sheet: about 4,600 rows; columns Manufacturer Name, Category, Subcategory, General, Name, Lot Number, Notes, Quantity, Date of Expiration, Pallet Number, Box Number, Image URL, Review. The site groups rows by Subcategory (12 groups such as Airway & Oxygen, IV Supplies, Needles & Syringes) and by kind of supply.
 - Many supplies have a photo of the actual item (Google Drive). Photos of patient-sample containers are withheld for privacy.
 - Product names are often long and technical (part numbers, sizes, sterile/non-sterile).
 - Flow: browse or search, add supplies to a list with a quantity, review, send; the clinic is emailed as the request moves through Submitted, Under review, Approved, Shipped (or Denied).

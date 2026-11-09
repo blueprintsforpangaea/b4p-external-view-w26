@@ -22,7 +22,7 @@ Pv = Preview, both = P and Pv.
 | Name | Scope | What it is |
 |---|---|---|
 | `GOOGLE_CREDENTIALS_JSON` | P (Pv optional) | The whole service-account key JSON as one value. Sheet mode only. Leave it out of Preview to get demo data. |
-| `GOOGLE_SHEET_ID` | P (Pv optional) | Inventory spreadsheet ID. Sheet mode only. |
+| `GOOGLE_SHEET_ID` | Pv optional | Inventory spreadsheet ID for local runs. The live site always reads the "CLASSIFIED Inventorying Responses" tab of spreadsheet `1OiT1QBBnlazfRCv0MgwE_LXvIVJNAVQha1Ez7M4Vc88`. |
 | `REQUESTS_SHEET_ID` | P, optional | Separate spreadsheet for requests. Defaults to `GOOGLE_SHEET_ID`. |
 | `DATABASE_URL` | P (Pv optional) | Postgres connection string (Supabase session-pooler URL). If set, the database is used instead of the sheet. |
 | `HQ_API_TOKEN` | both | Secret for HQ-only endpoints (`X-HQ-Token` header). Unset means those endpoints return 403. |

@@ -405,7 +405,7 @@ class FakeSpreadsheet:
         self.sheet1, self.requests = inventory, requests
 
     def worksheet(self, title):
-        return self.sheet1 if title == "Final Inventorying" else self.requests
+        return self.sheet1 if title == "CLASSIFIED Inventorying Responses" else self.requests
 
 
 @pytest.fixture

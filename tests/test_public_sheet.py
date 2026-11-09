@@ -62,10 +62,10 @@ def test_supplies_come_from_the_export_url_and_are_redacted(public_client):
 def test_without_a_gid_the_tab_is_read_by_name(public_client, monkeypatch):
     client, calls = public_client
     monkeypatch.delenv("INVENTORY_WORKSHEET_GID")
-    monkeypatch.setenv("INVENTORY_WORKSHEET_TITLE", "Final Inventorying")
+    monkeypatch.setenv("INVENTORY_WORKSHEET_TITLE", "CLASSIFIED Inventorying Responses")
     client.get("/api/supplies")
     assert calls[0] == ("https://docs.google.com/spreadsheets/d/sheet-123/gviz/tq",
-                        {"tqx": "out:csv", "sheet": "Final Inventorying"})
+                        {"tqx": "out:csv", "sheet": "CLASSIFIED Inventorying Responses"})
 
 
 def test_inventory_is_cached(public_client):

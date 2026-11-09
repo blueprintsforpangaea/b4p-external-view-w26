@@ -546,23 +546,35 @@ INVENTORY_CACHE_SECONDS = 60
 _inventory_cache: dict = {}
 
 
+# The inventory spreadsheet and tab the live site reads ("CLASSIFIED Inventorying Responses").
+LIVE_INVENTORY_SHEET_ID = "1OiT1QBBnlazfRCv0MgwE_LXvIVJNAVQha1Ez7M4Vc88"
+INVENTORY_TAB = "CLASSIFIED Inventorying Responses"
+
+
+def _inventory_sheet_id() -> str:
+    """On Vercel, always the live inventory spreadsheet; on a computer, GOOGLE_SHEET_ID."""
+    if os.environ.get("VERCEL"):
+        return LIVE_INVENTORY_SHEET_ID
+    return os.environ.get("GOOGLE_SHEET_ID", "").strip()
+
+
 def _read_sheet_inventory() -> list[dict]:
-    sheet_id = os.environ.get("GOOGLE_SHEET_ID")
+    sheet_id = _inventory_sheet_id()
     if not sheet_id:
         raise HTTPException(status_code=500, detail="Missing GOOGLE_SHEET_ID.")
 
     client = _gspread_client()
     spreadsheet = client.open_by_key(sheet_id)
-    # The "Final Inventorying" tab unless INVENTORY_WORKSHEET_TITLE names another (the read-only
-    # public path uses the same default). A tab named in the setting must exist; without the setting
-    # and without that tab, the first tab is read and a warning logged.
+    # The INVENTORY_TAB tab unless INVENTORY_WORKSHEET_TITLE names another (the read-only public
+    # path uses the same default). A tab named in the setting must exist; without the setting and
+    # without that tab, the first tab is read and a warning logged.
     title = os.environ.get("INVENTORY_WORKSHEET_TITLE", "").strip()
     try:
-        sheet = spreadsheet.worksheet(title or "Final Inventorying")
+        sheet = spreadsheet.worksheet(title or INVENTORY_TAB)
     except gspread.WorksheetNotFound:
         if title:
             raise HTTPException(status_code=500, detail=f"Inventory tab '{title}' not found.")
-        logger.warning("No 'Final Inventorying' tab: reading the first tab of the inventory sheet.")
+        logger.warning("No '%s' tab: reading the first tab of the inventory sheet.", INVENTORY_TAB)
         sheet = spreadsheet.sheet1
     all_values = sheet.get_all_values()
     if not all_values:
@@ -604,7 +616,7 @@ def _read_public_sheet_inventory() -> list[dict]:
     if gid:
         url, params = f"{base}/export", {"format": "csv", "gid": gid}
     else:
-        title = os.environ.get("INVENTORY_WORKSHEET_TITLE", "").strip() or "Final Inventorying"
+        title = os.environ.get("INVENTORY_WORKSHEET_TITLE", "").strip() or INVENTORY_TAB
         url, params = f"{base}/gviz/tq", {"tqx": "out:csv", "sheet": title}
     try:
         resp = requests.get(url, params=params, timeout=20)

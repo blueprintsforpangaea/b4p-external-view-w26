@@ -57,7 +57,7 @@ def test_header_cleaning_and_ragged_rows(monkeypatch):
     class SS:
         sheet1 = WS()
 
-        def worksheet(self, title):  # no "Final Inventorying" tab here: the first tab is read
+        def worksheet(self, title):  # no "CLASSIFIED Inventorying Responses" tab here: the first tab is read
             import gspread
             raise gspread.WorksheetNotFound(title)
 
@@ -278,3 +278,23 @@ def test_internal_post_is_rate_limited_and_hq_gated(sheet_client):
     ok = {"X-HQ-Token": "test-hq-token"}
     codes = [sheet_client.post("/api/requests", json=body, headers=ok).status_code for _ in range(12)]
     assert 429 in codes and codes[0] != 401
+
+
+@pytest.mark.parametrize("vercel, expected", [
+    ("1", "1OiT1QBBnlazfRCv0MgwE_LXvIVJNAVQha1Ez7M4Vc88"),  # live site: the inventory spreadsheet
+    ("", "inventory-id"),  # on a computer: GOOGLE_SHEET_ID
+])
+def test_inventory_spreadsheet_and_tab_on_the_live_site(monkeypatch, vercel, expected):
+    import main
+    opened, tabs = [], []
+
+    class SS:
+        def worksheet(self, title):
+            tabs.append(title)
+            return type("WS", (), {"get_all_values": lambda self: []})()
+
+    monkeypatch.setattr(main, "_gspread_client", lambda: type("C", (), {"open_by_key": lambda self, k: opened.append(k) or SS()})())
+    monkeypatch.setenv("VERCEL", vercel)
+    monkeypatch.setenv("GOOGLE_SHEET_ID", "inventory-id")
+    main._read_sheet_inventory()
+    assert opened == [expected] and tabs == ["CLASSIFIED Inventorying Responses"]

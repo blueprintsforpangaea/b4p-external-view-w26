@@ -151,7 +151,7 @@ def test_named_lot_overflow_spills_to_other_rows_of_the_name(monkeypatch):
 
 
 def test_service_account_mode_reads_the_final_inventorying_tab_by_default(monkeypatch):
-    """Without INVENTORY_WORKSHEET_TITLE, the "Final Inventorying" tab, not whichever tab is first."""
+    """Without INVENTORY_WORKSHEET_TITLE, the "CLASSIFIED Inventorying Responses" tab, not whichever tab is first."""
     import gspread
     import main
 
@@ -168,7 +168,7 @@ def test_service_account_mode_reads_the_final_inventorying_tab_by_default(monkey
         sheet1 = Tab([["Old tab"], ["not the inventory"]])
 
         def worksheet(self, title):
-            if title == "Final Inventorying":
+            if title == "CLASSIFIED Inventorying Responses":
                 return final
             raise gspread.WorksheetNotFound(title)
 
