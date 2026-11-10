@@ -23,7 +23,7 @@ Pv = Preview, both = P and Pv.
 |---|---|---|
 | `GOOGLE_CREDENTIALS_JSON` | P (Pv optional) | The whole service-account key JSON as one value. Sheet mode only. Leave it out of Preview to get demo data. |
 | `GOOGLE_SHEET_ID` | Pv optional | Inventory spreadsheet ID for local runs. The live site always reads the "CLASSIFIED Inventorying Responses" tab of spreadsheet `1OiT1QBBnlazfRCv0MgwE_LXvIVJNAVQha1Ez7M4Vc88`. |
-| `REQUESTS_SHEET_ID` | P, optional | Separate spreadsheet for requests. Defaults to `GOOGLE_SHEET_ID`. |
+| `REQUESTS_SHEET_ID` | P, optional | Separate spreadsheet for requests. On the live site it defaults to the inventory spreadsheet `1OiT1QBBnlazfRCv0MgwE_LXvIVJNAVQha1Ez7M4Vc88`; on a computer, to `GOOGLE_SHEET_ID`. |
 | `DATABASE_URL` | P (Pv optional) | Postgres connection string (Supabase session-pooler URL). If set, the database is used instead of the sheet. |
 | `HQ_API_TOKEN` | both | Secret for HQ-only endpoints (`X-HQ-Token` header). Unset means those endpoints return 403. |
 | `BREVO_API_KEY` or `RESEND_API_KEY` | P | Email provider. See [EMAIL.md](EMAIL.md). Leave out of Preview. |
@@ -32,7 +32,7 @@ Pv = Preview, both = P and Pv.
 | `EMAIL_REPLY_TO`, `EMAIL_ON_SUBMIT`, `EMAIL_DAILY_LIMIT` | P, optional | See [EMAIL.md](EMAIL.md). |
 | `PUBLIC_SHEET_READ` | P, optional | `1` reads the inventory through the sheet's public CSV export (no service-account key). The sheet must be shared "anyone with the link can view". |
 | `INVENTORY_WORKSHEET_GID` or `INVENTORY_WORKSHEET_TITLE` | P, optional | Which inventory tab to read (its `gid` from the sheet URL, or its name). |
-| `REQUESTS_WORKSHEET_TITLE` | P, optional | Name of the requests tab when the service account writes it. |
+| `ORG_REQUESTS_WORKSHEET_TITLE` | P, optional | Name of the requests tab when the service account writes it. Default on the live site: "Local Shipment Tracker"; on a computer: "Requests". |
 | `REQUESTS_WEBHOOK_URL`, `REQUESTS_WEBHOOK_SECRET` | P only | The Requests spreadsheet's own Apps Script deployment (from `requests-apps-script.gs`, made on that spreadsheet) and its secret. On Vercel each request goes to the "Requests" tab. Never put the temp sheet's URL here, and never set these in Preview. |
 
 Vercel sets `VERCEL`, `VERCEL_ENV` (`production`, `preview`, `development`) by itself. Do not set

@@ -177,7 +177,7 @@ def test_tests_cannot_reach_the_live_sheet(monkeypatch):
 
 
 @pytest.mark.parametrize("vercel, override, expected", [
-    ("1", "", "1k0rX_GZEkFppF8hC_JtN7pM9pRHEuHeYOXcsSJ23TTY"),  # live site: the Requests spreadsheet
+    ("1", "", "1OiT1QBBnlazfRCv0MgwE_LXvIVJNAVQha1Ez7M4Vc88"),  # live site: the inventory spreadsheet
     ("1", "override-id", "override-id"),
     ("", "", "inventory-id"),  # on a computer: the inventory doc, as before
 ])
@@ -190,6 +190,30 @@ def test_requests_spreadsheet_on_the_live_site(monkeypatch, vercel, override, ex
     monkeypatch.setenv("GOOGLE_SHEET_ID", "inventory-id")
     main._open_requests_spreadsheet()
     assert opened == [expected]
+
+
+@pytest.mark.parametrize("vercel, setting, expected", [
+    ("1", "", "Local Shipment Tracker"),  # live site
+    ("1", "Other Tab", "Other Tab"),
+    ("", "", "Requests"),  # on a computer, as before
+])
+def test_requests_tab_on_the_live_site(monkeypatch, vercel, setting, expected):
+    import main
+    asked = []
+
+    class WS:
+        def get_all_values(self):
+            return [main.ORG_REQ_HEADERS]
+
+    class SS:
+        def worksheet(self, title):
+            asked.append(title)
+            return WS()
+
+    monkeypatch.setenv("VERCEL", vercel)
+    monkeypatch.setenv("ORG_REQUESTS_WORKSHEET_TITLE", setting)
+    main._org_requests_worksheet(SS())
+    assert asked == [expected]
 
 
 def test_dotenv_is_not_loaded_on_hosted_platforms(tmp_path):

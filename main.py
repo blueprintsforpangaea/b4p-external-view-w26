@@ -549,6 +549,8 @@ _inventory_cache: dict = {}
 # The inventory spreadsheet and tab the live site reads ("CLASSIFIED Inventorying Responses").
 LIVE_INVENTORY_SHEET_ID = "1OiT1QBBnlazfRCv0MgwE_LXvIVJNAVQha1Ez7M4Vc88"
 INVENTORY_TAB = "CLASSIFIED Inventorying Responses"
+# The live site writes requests to the "Local Shipment Tracker" tab of that same spreadsheet.
+LIVE_REQUESTS_TAB = "Local Shipment Tracker"
 
 
 def _inventory_sheet_id() -> str:
@@ -639,9 +641,9 @@ def _open_spreadsheet():
 
 
 def _open_requests_spreadsheet():
-    # The live site writes to the "Requests" spreadsheet (the same one its Apps Script uses), not
-    # the inventory doc; REQUESTS_SHEET_ID still overrides it.
-    live = request_webhook.PRODUCTION[0] if os.environ.get("VERCEL") else ""
+    # The live site writes to the inventory spreadsheet (its LIVE_REQUESTS_TAB tab);
+    # REQUESTS_SHEET_ID still overrides it.
+    live = LIVE_INVENTORY_SHEET_ID if os.environ.get("VERCEL") else ""
     sheet_id = os.environ.get("REQUESTS_SHEET_ID") or live or os.environ.get("GOOGLE_SHEET_ID")
     if not sheet_id:
         raise HTTPException(status_code=500, detail="Missing REQUESTS_SHEET_ID.")
@@ -1300,7 +1302,8 @@ def _client_id_conflict() -> HTTPException:
 
 
 def _org_requests_worksheet(spreadsheet: gspread.Spreadsheet) -> gspread.Worksheet:
-    title = os.environ.get("ORG_REQUESTS_WORKSHEET_TITLE", "Requests").strip()
+    default = LIVE_REQUESTS_TAB if os.environ.get("VERCEL") else "Requests"
+    title = os.environ.get("ORG_REQUESTS_WORKSHEET_TITLE", "").strip() or default
     try:
         ws = spreadsheet.worksheet(title)
     except gspread.WorksheetNotFound:
