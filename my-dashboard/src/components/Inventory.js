@@ -18,7 +18,6 @@ const EXPIRATION = [
   ['180', 'Expires within 6 months', (d) => d != null && d >= 0 && d <= 182],
   ['later', 'Not expiring soon', (d) => d != null && d >= 90],
   ['none', 'No expiration date recorded', (d) => d == null],
-  ['expired', 'Expired', (d) => d != null && d < 0],
 ];
 
 const byName = (a, b) => collate(a.name, b.name);
@@ -87,38 +86,34 @@ function Select({ id, label, value, onChange, children }) {
 }
 
 // The inventory: when it was updated, the filters, then every matching supply in one table.
-// `products` can be requested; `expired` are shown greyed when "Hide expired items" is off.
-export default function Inventory({ products, expired, query, quantities, onQuantity, onOpenItem, updated, onRefresh, refreshing }) {
+// Expired supplies are never in `products`, so they never show.
+export default function Inventory({ products, query, quantities, onQuantity, onOpenItem, updated, onRefresh, refreshing }) {
   const [category, setCategory] = useState('');
   const [availability, setAvailability] = useState('');
   const [expiration, setExpiration] = useState('');
   const [sort, setSort] = useState('name');
-  const [hideExpired, setHideExpired] = useState(true);
   const [limit, setLimit] = useState(STEP);
 
-  const all = useMemo(() => applyBaseFilters([...products, ...expired], {}), [products, expired]);
-  const categories = useMemo(() => [...new Set(all.map((p) => p.subcategory))].sort(collate), [all]);
-  // Choosing "Expired" in Expiration shows expired items even with the box ticked.
-  const withExpired = !hideExpired || expiration === 'expired';
+  const categories = useMemo(() => [...new Set(products.map((p) => p.subcategory))].sort(collate), [products]);
 
   const visible = useMemo(() => {
     const avail = AVAILABILITY.find((o) => o[0] === availability);
     const exp = EXPIRATION.find((o) => o[0] === expiration);
     const order = SORTS.find((o) => o[0] === sort)[2];
-    return applyBaseFilters(withExpired ? all : products, { query }).filter((p) => (
+    return applyBaseFilters(products, { query }).filter((p) => (
       (!category || p.subcategory === category)
       && (!avail || avail[2](availabilityOf(p).kind))
       && (!exp || exp[2](daysUntil(p.expiry)))
     )).sort(order);
-  }, [all, products, withExpired, query, category, availability, expiration, sort]);
+  }, [products, query, category, availability, expiration, sort]);
 
-  const key = `${query}|${category}|${availability}|${expiration}|${sort}|${withExpired}`;
+  const key = `${query}|${category}|${availability}|${expiration}|${sort}`;
   const [lastKey, setLastKey] = useState(key);
   if (key !== lastKey) {
     setLastKey(key);
     setLimit(STEP);
   }
-  const total = withExpired ? all.length : products.length;
+  const total = products.length;
   const count = visible.length;
   const clear = () => { setCategory(''); setAvailability(''); setExpiration(''); };
 
@@ -148,10 +143,6 @@ export default function Inventory({ products, expired, query, quantities, onQuan
         <Select id="f-sort" label="Sort by" value={sort} onChange={setSort}>
           {SORTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </Select>
-        <label className="finder__check">
-          <input type="checkbox" checked={hideExpired} onChange={(e) => setHideExpired(e.target.checked)} />
-          Hide expired items
-        </label>
       </fieldset>
 
       <div className="inv__bar">

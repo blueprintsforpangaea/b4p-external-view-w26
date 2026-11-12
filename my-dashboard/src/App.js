@@ -166,8 +166,6 @@ export default function App() {
   const items = inventory.items;
   // One row per product (name + maker); its lots (sheet rows) are inside.
   const products = useMemo(() => groupProducts(items, holds), [items, holds]);
-  // Expired supplies: shown greyed when "Hide expired items" is off, never requested.
-  const expiredProducts = useMemo(() => groupProducts(items, holds, { expired: true }), [items, holds]);
   const stats = useMemo(() => [
     [products.filter(canRequest).length, 'Supply types available'],
     [new Set(products.map((p) => p.subcategory)).size, 'Categories'],
@@ -352,7 +350,7 @@ export default function App() {
           <SkeletonTable />
         </>
       );
-    } else if (products.length === 0 && expiredProducts.length === 0) {
+    } else if (products.length === 0) {
       list = (
         <EmptyState title="No supplies are listed right now">
           The Blueprints team updates the list as donations arrive. Check back soon.
@@ -362,7 +360,6 @@ export default function App() {
       list = (
         <Inventory
           products={products}
-          expired={expiredProducts}
           query={query}
           updated={inventory.savedAt ? formatDateTime(new Date(inventory.savedAt).toISOString()) : null}
           onRefresh={reload}

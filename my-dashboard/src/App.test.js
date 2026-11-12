@@ -477,13 +477,11 @@ describe('loading and errors', () => {
 
 
 describe('one-page inventory (the chapter site layout)', () => {
-  test('expired supplies are hidden until "Hide expired items" is unticked, and can’t be requested', async () => {
+  test('expired supplies never show, and there is no way to show them', async () => {
     await renderAt('#/supplies', /^Nitrile gloves$/);
     expect(screen.queryByText('Old saline bag')).not.toBeInTheDocument();
-    userEvent.click(screen.getByRole('checkbox', { name: 'Hide expired items' }));
-    const row = screen.getByText('Old saline bag').closest('tr');
-    expect(within(row).getAllByText('Expired').length).toBeGreaterThan(0);
-    expect(within(row).queryByRole('button', { name: /^Add/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /expired/i })).not.toBeInTheDocument();
+    expect(within(screen.getByLabelText('Expiration')).queryByRole('option', { name: 'Expired' })).not.toBeInTheDocument();
   });
 
   test('Availability, Expiration and Sort by narrow and order the list', async () => {
@@ -492,9 +490,6 @@ describe('one-page inventory (the chapter site layout)', () => {
     expect(screen.getByRole('button', { name: /^Gauze pads 4x4$/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Nitrile gloves$/ })).not.toBeInTheDocument();
     userEvent.selectOptions(screen.getByLabelText('Availability'), 'Any availability');
-    userEvent.selectOptions(screen.getByLabelText('Expiration'), 'Expired');
-    expect(screen.getByText('Old saline bag')).toBeInTheDocument(); // shown even with the box ticked
-    userEvent.selectOptions(screen.getByLabelText('Expiration'), 'Any expiration');
     userEvent.selectOptions(screen.getByLabelText('Sort by'), 'Quantity (most first)');
     const names = screen.getAllByRole('rowheader').map((r) => r.firstChild.textContent);
     expect(names[0]).toBe('Nitrile gloves');
